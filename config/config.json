@@ -1,0 +1,7 @@
+{
+    "send_hour" : 8,
+    "news" : [
+        {"name" : "hankyung", "send_flag" : true},
+        {"name" : "maekyung", "send_flag" : true}
+    ]
+}
