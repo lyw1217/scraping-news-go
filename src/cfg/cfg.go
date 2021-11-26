@@ -12,17 +12,33 @@ type CommKeys struct {
 }
 
 type News struct {
-	Name string `json:"name"`
-	Flag bool   `json:"send_flag"`
+	Name    string `json:"name"`
+	Flag    bool   `json:"send_flag"`
+	SendCnt int
 }
 
 type CommCfg struct {
-	SendHour int    `json:"send_hour"`
-	Media    []News `json:"news"`
+	SendHour   int    `json:"send_hour"`
+	SendMin    int    `json:"send_min"`
+	MaxSendCnt int    `json:"max_send_cnt"`
+	Media      []News `json:"news"`
 }
 
 var Config CommCfg
 var Keys CommKeys
+
+func ChkSendCnt(m *News) {
+	m.SendCnt += 1
+	if m.SendCnt >= Config.MaxSendCnt {
+		m.Flag = false
+		log.Println("Err. Max Send Count")
+	}
+}
+
+func ResetConfig(m *News) {
+	m.Flag = true
+	m.SendCnt = 0
+}
 
 // Load keys from json file
 func LoadKeysConfig() CommKeys {
@@ -46,7 +62,7 @@ func LoadKeysConfig() CommKeys {
 
 // Load configuration from json file
 func LoadCommConfig() CommCfg {
-	var c CommCfg
+	c := CommCfg{Media: make([]News, 0, 2)}
 
 	path, _ := filepath.Abs("../config/config.json")
 	file, err := os.Open(path)
