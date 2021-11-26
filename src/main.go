@@ -2,14 +2,24 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
 
-	"scraping/cfg"
+	"scraping/news"
 	"scraping/slack"
 )
 
 func main() {
-	fmt.Println(cfg.Config)
-	fmt.Println(cfg.Keys)
-	err := slack.SendMessageToSlack("hankyung", "test with go")
+
+	d_month := int(time.Now().Month())
+	d_day := time.Now().Day()
+
+	StatusCode, contents := news.GetHankyungIssueToday(d_month, d_day)
+	if StatusCode != 200 {
+		log.Println(StatusCode)
+		return
+	}
+
+	err := slack.SendMessageToSlack("hankyung", contents)
 	fmt.Println(err)
 }
