@@ -22,6 +22,7 @@ func ConvEuckrToUtf8(input string) string {
 	output, err := iconv.ConvertString(input, "euc-kr", "utf-8")
 	if err != nil {
 		log.Println(err)
+		return ""
 	}
 	return output
 }
@@ -32,6 +33,7 @@ func TransEuckrToUtf8(input string) string {
 	output, _, err := transform.String(euckrDec, input)
 	if err != nil {
 		log.Println(err)
+		return ""
 	}
 	return output
 }
@@ -45,14 +47,16 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	resp, err := http.Get(list_url)
 	if err != nil {
 		log.Println(err, "Err, Failed to Get Request")
+		return (-1), err.Error()
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
+	if p.StatusCode = resp.StatusCode; p.StatusCode == 200 {
 		// HTML Read
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			log.Println(err, "Err. Failed to NewDocumentFromReader()")
+			return p.StatusCode, err.Error()
 		}
 
 		// 파싱
@@ -61,6 +65,10 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		// text-box 순회하면서 문자열에 추가
 		container.Each(func(i int, s *goquery.Selection) {
 			content := ConvEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
+			if content == "" {
+				log.Println("Err. Failed to convert content : ", s.Text())
+				return
+			}
 
 			// https://stackoverflow.com/questions/65533097/replace-nbsp-or-0xao-with-space-in-a-string
 			//content := TransEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
@@ -77,12 +85,13 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 			t_day, _ := strconv.Atoi(strings.TrimSpace(t_date[2]))
 
 			if d_month == t_month && d_day == t_day {
-				return resp.StatusCode, strings.Join(p.Contents, "\r\n\n")
+				return p.StatusCode, strings.Join(p.Contents, "\r\n\n")
 			} else {
-				return resp.StatusCode, fmt.Sprintf("No article on %d-%d-%d", t_year, t_month, t_day)
+				return p.StatusCode, fmt.Sprintf("No article on %d-%d-%d", t_year, t_month, t_day)
 			}
 		}
 	}
 
-	return resp.StatusCode, "Err. Failed to get the Issue Today."
+	log.Println("Err. Failed to get the Issue Today.")
+	return resp.StatusCode, err.Error()
 }
