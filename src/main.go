@@ -38,12 +38,25 @@ func getMorningNews() {
 						}
 
 						log.Println(contents)
-						media.Flag = false
+						c.Media[i].Flag = false
 
 					// 매일 경제
 					case "maekyung":
-						log.Println("아직 미구현")
+						StatusCode, contents := news.GetMaekyungMSG(d_month, d_day)
+						if StatusCode != 200 {
+							log.Println("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
+							cfg.ChkSendCnt(&c.Media[i])
+							continue
+						}
 
+						if err := slack.SendMessageToSlack("매일경제 매.세.지", contents); err != nil {
+							log.Println("Err. slack.SendMessageToSlack")
+							cfg.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
+						log.Println(contents)
+						c.Media[i].Flag = false
 					default:
 						log.Println("Err. Wrong Key")
 					}
