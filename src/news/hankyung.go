@@ -3,51 +3,22 @@ package news
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/djimenez/iconv-go" // https://pkg.go.dev/github.com/djimenez/iconv-go
-	"golang.org/x/text/encoding/korean"
-	"golang.org/x/text/transform"
 )
-
-type pageInfo struct {
-	StatusCode int
-	Contents   []string
-}
-
-func ConvEuckrToUtf8(input string) string {
-	output, err := iconv.ConvertString(input, "euc-kr", "utf-8")
-	if err != nil {
-		log.Println(err)
-		return ""
-	}
-	return output
-}
-
-func TransEuckrToUtf8(input string) string {
-	euckrDec := korean.EUCKR.NewDecoder()
-
-	output, _, err := transform.String(euckrDec, input)
-	if err != nil {
-		log.Println(err)
-		return ""
-	}
-	return output
-}
 
 func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	list_url := "https://mobile.hankyung.com/apps/newsletter.view?topic=morning&gnb="
 
 	p := &pageInfo{Contents: make([]string, 0, 10)}
 
-	// Request
-	resp, err := http.Get(list_url)
+	// 1. Issue Today 조회
+	resp, err := requestGetDocument(list_url)
 	if err != nil {
 		log.Println(err, "Err, Failed to Get Request")
-		return (-1), err.Error()
+		return resp.StatusCode, err.Error()
 	}
 	defer resp.Body.Close()
 
@@ -87,7 +58,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 			if d_month == t_month && d_day == t_day {
 				return p.StatusCode, strings.Join(p.Contents, "\r\n\n")
 			} else {
-				return p.StatusCode, fmt.Sprintf("No article on %d-%d-%d", t_year, t_month, t_day)
+				return p.StatusCode, fmt.Sprintf("No article on %d-%d-%d", t_year, d_month, d_day)
 			}
 		}
 	}
