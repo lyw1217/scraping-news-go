@@ -2,11 +2,11 @@ package news
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
@@ -17,7 +17,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	// 1. Issue Today 조회
 	resp, err := requestGetDocument(list_url)
 	if err != nil {
-		log.Println(err, "Err, Failed to Get Request")
+		log.Warn(err, "Err, Failed to Get Request")
 		return resp.StatusCode, err.Error()
 	}
 	defer resp.Body.Close()
@@ -26,7 +26,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		// HTML Read
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			log.Println(err, "Err. Failed to NewDocumentFromReader()")
+			log.Warn(err, "Err. Failed to NewDocumentFromReader()")
 			return p.StatusCode, err.Error()
 		}
 
@@ -37,7 +37,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		container.Each(func(i int, s *goquery.Selection) {
 			content := ConvEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
 			if content == "" {
-				log.Println("Err. Failed to convert content : ", s.Text())
+				log.Warn("Err. Failed to convert content : ", s.Text())
 				return
 			}
 
@@ -63,6 +63,6 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		}
 	}
 
-	log.Println("Err. Failed to get the Issue Today.")
+	log.Warn("Err. Failed to get the Issue Today.")
 	return resp.StatusCode, err.Error()
 }

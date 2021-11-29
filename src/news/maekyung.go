@@ -2,11 +2,11 @@ package news
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetMaekyungMSG(d_month int, d_day int) (int, string) {
@@ -20,7 +20,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 	// 1. 매세지 첫 page 목록 조회
 	resp, err := requestGetDocument(list_url)
 	if err != nil {
-		log.Println(err, "Err, Failed to Get Request")
+		log.Warn(err, "Err, Failed to Get Request")
 		return resp.StatusCode, err.Error()
 	}
 	defer resp.Body.Close()
@@ -29,7 +29,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		// HTML Read
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			log.Println(err, "Err. Failed to NewDocumentFromReader()")
+			log.Warn(err, "Err. Failed to NewDocumentFromReader()")
 			return p.StatusCode, err.Error()
 		}
 
@@ -41,7 +41,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 			title := ConvEuckrToUtf8(s.Find("a").Text())
 			href, ok := s.Find("a").Attr("href")
 			if !ok {
-				log.Println(ok, "Err. No Exist href in", p.Links[i].Title)
+				log.Info(ok, "Err. No Exist href in", p.Links[i].Title)
 				return
 			}
 
@@ -55,7 +55,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 				resp_link, err := requestGetDocument(lnk.Url)
 				if err != nil {
-					log.Println(err, "Err, Failed to Get Request")
+					log.Warn(err, "Err, Failed to Get Request")
 					break
 				}
 				defer resp_link.Body.Close()
@@ -63,7 +63,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 				if p.StatusCode = resp_link.StatusCode; p.StatusCode == 200 {
 					html, err := goquery.NewDocumentFromReader(resp_link.Body)
 					if err != nil {
-						log.Println(err, "Err. Failed to NewDocumentFromReader()")
+						log.Warn(err, "Err. Failed to NewDocumentFromReader()")
 						break
 					}
 
@@ -74,7 +74,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 						content := ConvEuckrToUtf8(s.Text())
 						if content == "" {
-							log.Println("Err. Failed to convert content : ", s.Text())
+							log.Warn("Err. Failed to convert content : ", s.Text())
 							return
 						}
 
@@ -84,7 +84,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 					return p.StatusCode, strings.Join(p.Contents, "")
 
 				} else {
-					log.Println("Err. Failed to get M.S.G Article.")
+					log.Warn("Err. Failed to get M.S.G Article.")
 					return p.StatusCode, "Err. Failed to get M.S.G Article."
 				}
 			}
@@ -93,6 +93,6 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		return p.StatusCode, fmt.Sprintf("No article on %d-%d", d_month, d_day)
 	}
 
-	log.Println("Err. Failed to get the M.S.G list.")
+	log.Warn("Err. Failed to get the M.S.G list.")
 	return resp.StatusCode, err.Error()
 }

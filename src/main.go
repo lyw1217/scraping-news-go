@@ -1,10 +1,12 @@
 package main
 
 import (
-	"log"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"scraping/cfg"
+	"scraping/logging"
 	"scraping/news"
 	"scraping/slack"
 )
@@ -26,39 +28,39 @@ func getMorningNews() {
 					case "hankyung":
 						StatusCode, contents := news.GetHankyungIssueToday(d_month, d_day)
 						if StatusCode != 200 {
-							log.Println("Err. news.GetHankyungIssueToday, StatusCode :", StatusCode)
+							log.Warn("Err. news.GetHankyungIssueToday, StatusCode :", StatusCode)
 							cfg.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := slack.SendMessageToSlack("한국경제 Issue Today", contents); err != nil {
-							log.Println("Err. slack.SendMessageToSlack")
+							log.Warn("Err. slack.SendMessageToSlack")
 							cfg.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
-						log.Println(contents)
+						log.Info(contents)
 						c.Media[i].Flag = false
 
 					// 매일 경제
 					case "maekyung":
 						StatusCode, contents := news.GetMaekyungMSG(d_month, d_day)
 						if StatusCode != 200 {
-							log.Println("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
+							log.Warn("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
 							cfg.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := slack.SendMessageToSlack("매일경제 매.세.지", contents); err != nil {
-							log.Println("Err. slack.SendMessageToSlack")
+							log.Warn("Err. slack.SendMessageToSlack")
 							cfg.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
-						log.Println(contents)
+						log.Info(contents)
 						c.Media[i].Flag = false
 					default:
-						log.Println("Err. Wrong Key")
+						log.Warn("Err. Wrong Key")
 					}
 				}
 			} else if c.SendHour != d_hour {
@@ -69,7 +71,13 @@ func getMorningNews() {
 	}
 }
 
+func init() {
+	logging.SetupLogger()
+}
+
 func main() {
+	log.Error(" < S C R A P E R >    S T A R T ")
+
 	done := make(chan bool)
 	go getMorningNews()
 	<-done

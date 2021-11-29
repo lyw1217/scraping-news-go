@@ -2,9 +2,9 @@ package slack
 
 import (
 	"fmt"
-	"log"
 	"scraping/cfg"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
 )
 
@@ -17,7 +17,7 @@ func SendFileToSlack(title string, url string) error {
 	}
 	file, err := api.UploadFile(params)
 	if err != nil {
-		log.Println(err)
+		log.Warn(err)
 		return err
 	}
 
@@ -42,7 +42,7 @@ func SendMessageToSlack(media string, msg string) error {
 		slack.MsgOptionAsUser(true), // Add this if you want that the bot would post message as a user, otherwise it will send response using the default slackbot
 	)
 	if err != nil {
-		log.Println(err)
+		log.Warn(err)
 		return err
 	}
 	//fmt.Printf("Message successfully sent to channel %s at %s", channelID, timestamp)
