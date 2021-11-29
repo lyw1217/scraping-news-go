@@ -1,11 +1,30 @@
 package slack
 
 import (
+	"fmt"
 	"log"
 	"scraping/cfg"
 
 	"github.com/slack-go/slack"
 )
+
+// send file to slack
+func SendFileToSlack(title string, url string) error {
+	api := slack.New(cfg.Keys.Slack)
+	params := slack.FileUploadParameters{
+		Title: title,
+		File:  url,
+	}
+	file, err := api.UploadFile(params)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	fmt.Printf("Name: %s, URL: %s\n", file.Name, file.URL)
+
+	return err
+}
 
 // send message to slack
 func SendMessageToSlack(media string, msg string) error {
