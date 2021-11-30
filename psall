@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CMD="SCRAPER"
+CMD="GOCRAPER"
 
 # COLOR SET #
 NORMAL="\033[0;0m"
@@ -24,10 +24,10 @@ print_status()
 	PROC_PID=$(pgrep -f ${CMD})
 
 	echo ""
-	echo -e "[$LIGHT_BLUE SCRAPER$NORMAL STATUS ] written by$LIGHT_CYAN YWLEE$NORMAL"
+	echo -e " [$LIGHT_BLUE GOCRAPER$NORMAL STATUS ] written by$LIGHT_CYAN YWLEE$NORMAL"
 
 	if [ -z "$PROC_PID" ]; then
-		echo -e "> Current Status : $RED[ DOWN ]$NORMAL"
+		echo -e " > Current Status : $RED[ DOWN ]$NORMAL"
 		echo ""
 	else
 		# PROC_CMD
@@ -40,10 +40,10 @@ print_status()
 		DIFF=$((NOW - (UPTIME - STARTTIME)))
 		PROC_STIME=`date '+%Y/%m/%d %H:%M:%S' -d @$DIFF`
 		echo ""
-		echo -e "> Current Status : $GREEN[ UP ]$NORMAL"
-		echo    "> PID            : $(pgrep -f ${CMD})"
-		echo    "> Start Time     : $PROC_STIME"
-		echo    "> CMD            : $PROC_CMD"
+		echo -e " > Current Status : $GREEN[ UP ]$NORMAL"
+		echo    " > PID            : $(pgrep -f ${CMD})"
+		echo    " > Start Time     : $PROC_STIME"
+		echo    " > CMD            : $PROC_CMD"
 		echo ""
 	fi
 	echo ""

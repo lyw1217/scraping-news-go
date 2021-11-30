@@ -1,11 +1,22 @@
 #!/bin/bash
 
-DIR_PATH="/home/leeyw/Documents/github/scraping-news"
+APP="scraping-news-go"
+DIR_PATH="/home/leeyw/Documents/github/${APP}"
+
+GOPATH=$DIR_PATH
+GOBIN=$DIR_PATH/bin
+
 LOG_PATH="${DIR_PATH}/log"
 LOG_NAME="nohup.log"
-VENV_PATH="${DIR_PATH}/venv/bin"
-EXE_PY="${DIR_PATH}/src/main.py"
-CMD="SCRAPER"
+
+MOD="scraping"
+EXE="${GOBIN}/${MOD}"
+CMD="GOCRAPER"
+CMD_GO="/usr/local/go/bin/go"
+
+export GOPATH
+export GOBIN
+
 WAIT_TIME=7
 
 # sudo check
@@ -14,6 +25,7 @@ if [ $(id -u) -ne 0 ]; then exec sudo bash "$0" "$@"; exit; fi
 echo ""
 echo "----------------------------------"
 echo "         [ SCRAPER STOP ]         "
+echo "                           with go"
 echo "----------------------------------"
 echo ""
 
