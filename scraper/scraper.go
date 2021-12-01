@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
-	log "github.com/sirupsen/logrus"
 	"scraping-news/config"
 	"scraping-news/util"
+
+	"github.com/PuerkitoBio/goquery"
+	log "github.com/sirupsen/logrus"
 )
 
 type linkInfo struct {
@@ -202,13 +203,15 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	return resp.StatusCode, err.Error()
 }
 
+var gSysClose bool
+
 // start scraping
 func StartScraping() {
-	log.Error(" < S C R A P E R >    S T A R T ")
+	log.Error("< SCRAPER > Start Scraping Routine - Started ......")
 
 	c := config.Config
 
-	for {
+	for !gSysClose {
 		d_month := int(time.Now().Month())
 		d_day := int(time.Now().Day())
 		d_hour := int(time.Now().Hour())
@@ -261,6 +264,8 @@ func StartScraping() {
 				config.ResetConfig(&c.Media[i])
 			}
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(1) * time.Second)
 	}
+
+	log.Error("< SCRAPER > Exit StartScraping Routine ...")
 }
