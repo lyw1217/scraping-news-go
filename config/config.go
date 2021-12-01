@@ -2,12 +2,13 @@ package config
 
 import (
 	"encoding/json" // https://pkg.go.dev/encoding/json
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
@@ -40,7 +41,7 @@ func ChkSendCnt(m *News) {
 	m.SendCnt += 1
 	if m.SendCnt >= Config.MaxSendCnt {
 		m.Flag = false
-		log.Println("Err. Max Send Count")
+		log.Println("Maximum Send Count reached..")
 	}
 }
 
@@ -66,6 +67,8 @@ func LoadKeysConfig() CommKeys {
 		log.Println(err)
 	}
 
+	log.Error("< SCRAPER > Successful loading of Key Info ........")
+
 	return k
 }
 
@@ -86,6 +89,14 @@ func LoadCommConfig() CommCfg {
 		log.Println(err)
 	}
 
+	log.Error("< SCRAPER > Configuration Informations ............")
+	log.Errorf(" - Send Hour      = %d", c.SendHour)
+	log.Errorf(" - Send Minute    = %d", c.SendMin)
+	log.Errorf(" - Max Send Count = %d", c.MaxSendCnt)
+	for i, m := range c.Media {
+		log.Errorf(" - Media    < %d > = %s", i, m.Name)
+		log.Errorf(" - Flag     < %d > = %t", i, m.Flag)
+	}
 	return c
 }
 
@@ -131,10 +142,12 @@ func SetupLogger() {
 	log.SetLevel(log.InfoLevel)
 	log.SetOutput(multiWriter)
 	log.SetReportCaller(true) // 해당 이벤트 발생 시 함수, 파일명 표기
+
+	log.Error("< SCRAPER > Successful Logger setup ...............")
 }
 
 func init() {
+	SetupLogger()
 	Config = LoadCommConfig()
 	Keys = LoadKeysConfig()
-	SetupLogger()
 }

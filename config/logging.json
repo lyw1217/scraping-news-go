@@ -1,5 +1,5 @@
 {
-    "filename":"../log/scraper.log",
+    "filename":"./log/scraper.log",
     "maxsize":10,
     "maxage":7,
     "maxbackups":7,
