@@ -3,18 +3,16 @@
 APP="scraping-news-go"
 DIR_PATH="/home/leeyw/Documents/github/${APP}"
 
-GOPATH=$DIR_PATH
 GOBIN=$DIR_PATH/bin
 
 LOG_PATH="${DIR_PATH}/log"
 LOG_NAME="nohup.log"
 
-MOD="scraping"
+MOD="scraping-news"
 EXE="${GOBIN}/${MOD}"
 CMD="GOCRAPER"
 CMD_GO="/usr/local/go/bin/go"
 
-export GOPATH
 export GOBIN
 
 WAIT_TIME=7
@@ -26,14 +24,10 @@ check_dir()
 	for dir in ${target_dir[@]}
 	do
 		if [ ! -d $dir ];then
-			echo " Directory Does Not Exist! > $dir"
+			echo " Directory Does Not Exist! > ${dir}"
 			echo ""
-			echo " Required Directory "
-			for d in ${target_dir[@]}
-			do
-				echo " - $d"
-			done
-			exit 1
+			echo " mkdir ${dir}"
+			/usr/bin/mkdir ${dir}
 		fi
 	done
 }
@@ -90,8 +84,13 @@ start_app()
 	git pull
 
 	echo ""
+	echo " > go mod tidy"
+	cd ${DIR_PATH}
+	${CMD_GO} mod tidy
+
+	echo ""
 	echo " > 패키지 생성"
-	cd ${DIR_PATH}/src
+	cd ${DIR_PATH}
 	${CMD_GO} install
 	sleep 0.5
 
@@ -125,7 +124,7 @@ start_app()
 	echo "   패키지 실행 완료!"
 	echo ""
 
-	exec ${DIR_PATH}/psall
+	exec ${DIR_PATH}/scripts/psall.sh
 	echo ""
 	exit 0
 

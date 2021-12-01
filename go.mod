@@ -1,4 +1,4 @@
-module scraping
+module scraping-news
 
 go 1.17
 
@@ -16,8 +16,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
-	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
+	golang.org/x/net v0.0.0-20210916014120-12bc252f5db8 // indirect
 	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

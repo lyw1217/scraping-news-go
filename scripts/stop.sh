@@ -3,18 +3,16 @@
 APP="scraping-news-go"
 DIR_PATH="/home/leeyw/Documents/github/${APP}"
 
-GOPATH=$DIR_PATH
 GOBIN=$DIR_PATH/bin
 
 LOG_PATH="${DIR_PATH}/log"
 LOG_NAME="nohup.log"
 
-MOD="scraping"
+MOD="scraping-news"
 EXE="${GOBIN}/${MOD}"
 CMD="GOCRAPER"
 CMD_GO="/usr/local/go/bin/go"
 
-export GOPATH
 export GOBIN
 
 WAIT_TIME=7

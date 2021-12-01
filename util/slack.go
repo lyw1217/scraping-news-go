@@ -1,16 +1,16 @@
-package slack
+package util
 
 import (
 	"fmt"
-	"scraping/cfg"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
+	"scraping-news/config"
 )
 
 // send file to slack
 func SendFileToSlack(title string, url string) error {
-	api := slack.New(cfg.Keys.Slack)
+	api := slack.New(config.Keys.Slack)
 	params := slack.FileUploadParameters{
 		Title: title,
 		File:  url,
@@ -28,7 +28,7 @@ func SendFileToSlack(title string, url string) error {
 
 // send message to slack
 func SendMessageToSlack(media string, msg string) error {
-	api := slack.New(cfg.Keys.Slack)
+	api := slack.New(config.Keys.Slack)
 	attachment := slack.Attachment{
 		Pretext: media,
 		Text:    msg,
