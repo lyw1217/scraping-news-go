@@ -82,6 +82,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 		// 파싱
 		container := html.Find("dt.tit") // returns a new Selection ojbect
+		//container := html.Find("div.list_area2")
 
 		// 하이퍼링크 순회 및 저장
 		container.Each(func(i int, s *goquery.Selection) {
@@ -91,7 +92,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 				log.Info(ok, "Err. No Exist href in", p.Links[i].Title)
 				return
 			}
-
+			fmt.Printf("title = %s, href = %s\n", title, href)
 			p.AddLinks(title, href)
 		})
 
@@ -99,7 +100,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		for _, lnk := range p.Links {
 			if strings.Contains(lnk.Title, strconv.Itoa(d_month)) &&
 				strings.Contains(lnk.Title, strconv.Itoa(d_day)) {
-
+				fmt.Printf("Find article(month:%d, day:%d)\n", d_month, d_day)
 				resp_link, err := requestGetDocument(lnk.Url)
 				if err != nil {
 					log.Warn(err, "Err, Failed to Get Request")
@@ -127,6 +128,11 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 						p.Contents = append(p.Contents, content)
 					})
+
+					if len(p.Contents) == 0 {
+						log.Warn("Err. Failed to get Contents")
+						return p.StatusCode, "Err. Failed to get Contents"
+					}
 
 					return p.StatusCode, strings.Join(p.Contents, "")
 
