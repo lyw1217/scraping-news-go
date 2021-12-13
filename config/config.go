@@ -143,6 +143,11 @@ func SetupLogger() {
 	log.SetOutput(multiWriter)
 	log.SetReportCaller(true) // 해당 이벤트 발생 시 함수, 파일명 표기
 
+	log.Error(" ")
+	log.Error("===================================================")
+	log.Error(" Scraping News with Go                 S T A R T   ")
+	log.Error("===================================================")
+	log.Error(" ")
 	log.Error("< SCRAPER > Successful Logger setup ...............")
 }
 
