@@ -31,7 +31,8 @@ echo " > 현재 구동중인 애플리케이션 pid 확인"
 
 CURRENT_PID=$(pgrep -f ${CMD})
 
-echo " 현재 구동중인 어플리케이션 pid: ${CURRENT_PID}"
+echo "   pid: ${CURRENT_PID}"
+echo ""
 
 if [ -z "${CURRENT_PID}" ]; then
     echo " > 현재 구동중인 애플리케이션이 없음"

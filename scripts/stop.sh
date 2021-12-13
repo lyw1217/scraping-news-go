@@ -34,7 +34,7 @@ echo ""
 
 CURRENT_PID=$(pgrep -f ${CMD})
 
-echo "현재 구동중인 어플리케이션 pid: $CURRENT_PID"
+echo "  pid: $CURRENT_PID"
 if [ -z "$CURRENT_PID" ]; then
     echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
 else
@@ -42,7 +42,7 @@ else
     kill -15 $CURRENT_PID
 	sleep 0.5
 	
-	for cnt in {1..${WAIT_TIME}}
+	for cnt in $(seq ${WAIT_TIME})
 	do
 		CURRENT_PID=$(pgrep -f ${CMD})
 		if [ -z "$CURRENT_PID" ]; then

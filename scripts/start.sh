@@ -38,7 +38,8 @@ check_app_running()
 
 	CURRENT_PID=$(pgrep -f ${CMD})
 
-	echo " 현재 구동중인 어플리케이션 pid: $CURRENT_PID"
+	echo "   pid: $CURRENT_PID"
+	echo ""
 
 	if [ -z "$CURRENT_PID" ]; then
 		echo " > 현재 구동중인 애플리케이션이 없음"
@@ -48,21 +49,24 @@ check_app_running()
 		kill -15 $CURRENT_PID
 		sleep 0.5
 
-		for cnt in {1..${WAIT_TIME}}
+		for cnt in $(seq ${WAIT_TIME})
 		do
 			CURRENT_PID=$(pgrep -f ${CMD})
+
 			if [ -z "$CURRENT_PID" ]; then
+				echo ""
 				echo " > 어플리케이션 종료 성공!"
 				echo ""
 				break
+			else
+				if [ ${cnt} == ${WAIT_TIME} ]; then
+					echo ""
+					echo " > 어플리케이션 종료 실패.. 다시 시도하세요"
+					echo ""
+					exit 1
+				fi
 			fi
 			sleep 0.5
-
-			if [ ${cnt} == ${WAIT_TIME} ]; then
-				echo " > 어플리케이션 종료 실패.. 다시 시도하세요"
-				echo ""
-				exit 1
-			fi
 		done
 	fi
 }
@@ -70,7 +74,8 @@ check_app_running()
 start_app()
 {
 	check_app_running
-
+	
+	echo ""
 	echo " > 디렉토리 이동"
 	echo ""
 	cd ${DIR_PATH}
