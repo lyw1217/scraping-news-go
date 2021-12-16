@@ -1,0 +1,10 @@
+bin
+pkg
+log
+scripts
+
+LICENSE
+README.md
+
+.git
+.gitignore
