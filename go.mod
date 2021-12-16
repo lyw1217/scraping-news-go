@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/djimenez/iconv-go v0.0.0-20160305225143-8960e66bd3da
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.10.0
 	golang.org/x/text v0.3.7

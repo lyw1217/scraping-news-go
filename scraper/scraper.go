@@ -86,7 +86,8 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 		// 하이퍼링크 순회 및 저장
 		container.Each(func(i int, s *goquery.Selection) {
-			title := util.ConvEuckrToUtf8(s.Find("a").Text())
+			//title := util.ConvEuckrToUtf8(s.Find("a").Text())
+			title := util.TransEuckrToUtf8(s.Find("a").Text())
 			href, ok := s.Find("a").Attr("href")
 			if !ok {
 				log.Info(ok, "Err. No Exist href in", p.Links[i].Title)
@@ -120,7 +121,8 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 					// view_txt 순회하면서 문자열에 추가
 					container.Each(func(i int, s *goquery.Selection) {
 
-						content := util.ConvEuckrToUtf8(s.Text())
+						//content := util.ConvEuckrToUtf8(s.Text())
+						content := util.TransEuckrToUtf8(s.Text())
 						if content == "" {
 							log.Warn("Err. Failed to convert content : ", s.Text())
 							return
@@ -177,7 +179,8 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 
 		// text-box 순회하면서 문자열에 추가
 		container.Each(func(i int, s *goquery.Selection) {
-			content := util.ConvEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
+			//content := util.ConvEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
+			content := util.TransEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
 			if content == "" {
 				log.Warn("Err. Failed to convert content : ", s.Text())
 				return
