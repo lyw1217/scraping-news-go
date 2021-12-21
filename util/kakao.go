@@ -13,8 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//var kakaoLoginUrl string = "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=" + config.Keys.Kakao.Key + "&redirect_uri=" + config.Keys.Kakao.RedirectUrl
-
 const kakaoSendToMeUrl string = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
 
 type Link_t struct {
@@ -22,7 +20,7 @@ type Link_t struct {
 	MobileWebUrl string `json:"mobile_web_url"`
 }
 
-type TemplateObject struct {
+type TemplateObject_t struct {
 	ObjectType  string `json:"object_type"`
 	Text        string `json:"text"`
 	Link        Link_t `json:"link"`
@@ -30,14 +28,14 @@ type TemplateObject struct {
 }
 
 func KakaoSendToMe(news string, msg string, lnk string) error {
-	log.Println("send msg to me by kakaotalk")
+	log.Println("Send me a message through KakaoTalk.")
 	k := config.Keys.Kakao
 
 	var l = Link_t{
 		WebUrl:       lnk,
 		MobileWebUrl: lnk,
 	}
-	var tobj = TemplateObject{
+	var tobj = TemplateObject_t{
 		ObjectType:  "text",
 		Text:        msg,
 		Link:        l,
@@ -46,10 +44,11 @@ func KakaoSendToMe(news string, msg string, lnk string) error {
 
 	jsonBytes, _ := json.Marshal(tobj)
 	buff := bytes.NewBuffer(jsonBytes)
-
+	println(buff.String())
 	data := url.Values{}
 	data.Set("template_object", buff.String())
 
+	// https://golang.cafe/blog/how-to-make-http-url-form-encoded-request-golang.html
 	req, err := http.NewRequest("POST", kakaoSendToMeUrl, strings.NewReader(data.Encode())) // URL-encoded payload
 	if err != nil {
 		log.Fatal(err)
@@ -64,12 +63,11 @@ func KakaoSendToMe(news string, msg string, lnk string) error {
 	}
 	defer rsp.Body.Close()
 
-	rspBody, err := ioutil.ReadAll(req.Body)
+	rspBody, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		str := string(rspBody)
 		log.Fatal(str)
 	}
-	println(rspBody)
 
 	return err
 }

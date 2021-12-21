@@ -14,21 +14,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type linkInfo struct {
+type linkInfo_t struct {
 	Title string
 	Url   string
 }
 
-type pageInfo struct {
+type pageInfo_t struct {
 	StatusCode int
-	Links      []linkInfo
+	Links      []linkInfo_t
 	Contents   []string
 }
 
-func (p *pageInfo) AddLinks(t string, u string) []linkInfo {
+func (p *pageInfo_t) AddLinks(t string, u string) []linkInfo_t {
 	// https://stackoverflow.com/questions/18042439/go-append-to-slice-in-struct
 	// https://stackoverflow.com/questions/34329441/golang-struct-array-values-not-appending-in-loop
-	p.Links = append(p.Links, linkInfo{
+	p.Links = append(p.Links, linkInfo_t{
 		Title: t,
 		Url:   u,
 	})
@@ -57,10 +57,10 @@ func requestGetDocument(url string) (*http.Response, error) {
 
 // scrap maekyung M.S.G on the date as parameters
 func GetMaekyungMSG(d_month int, d_day int) (int, string) {
-	list_url := mkMSGUrl
+	list_url := MkMSGUrl
 
-	p := &pageInfo{
-		Links:    make([]linkInfo, 0, 10),
+	p := &pageInfo_t{
+		Links:    make([]linkInfo_t, 0, 10),
 		Contents: make([]string, 0, 10),
 	}
 
@@ -154,9 +154,9 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 // scrap hankyung issue today on the date as a parameters
 func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
-	list_url := hkIssueTodayUrl
+	list_url := HkIssueTodayUrl
 
-	p := &pageInfo{Contents: make([]string, 0, 10)}
+	p := &pageInfo_t{Contents: make([]string, 0, 10)}
 
 	// 1. Issue Today 조회
 	resp, err := requestGetDocument(list_url)
@@ -245,6 +245,12 @@ func StartScraping() {
 							continue
 						}
 
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+							log.Warn("Err. KakaoSendToMe")
+							config.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
 						log.Info(contents)
 						c.Media[i].Flag = false
 
@@ -259,6 +265,12 @@ func StartScraping() {
 
 						if err := util.SendMessageToSlack("매일경제 매.세.지", contents); err != nil {
 							log.Warn("Err. slack.SendMessageToSlack")
+							config.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+							log.Warn("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
