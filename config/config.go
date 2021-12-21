@@ -17,8 +17,17 @@ const (
 	loggingPath string = "./config/logging.json"
 )
 
+type Kakao_t struct {
+	AppId       string `json:"app_id"`
+	Key         string `json:"key"`
+	Template    string `json:"template"`
+	RedirectUrl string `json:"redirect_url"`
+	Token       string `json:"token"`
+}
+
 type CommKeys struct {
-	Slack string `json:"SLACK_KEY"` // 구조체 필드에 태그 지정
+	Slack string  `json:"slack_key"` // 구조체 필드에 태그 지정
+	Kakao Kakao_t `json:"kakao"`
 }
 
 type News struct {
