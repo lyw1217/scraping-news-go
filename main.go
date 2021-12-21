@@ -6,5 +6,6 @@ import (
 
 func main() {
 	go scraper.StartScraping()
+	go scraper.InitHandler()
 	scraper.WaitSignal()
 }
