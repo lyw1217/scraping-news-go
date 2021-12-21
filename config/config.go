@@ -25,28 +25,28 @@ type Kakao_t struct {
 	Token       string `json:"token"`
 }
 
-type CommKeys struct {
+type CommKeys_t struct {
 	Slack string  `json:"slack_key"` // 구조체 필드에 태그 지정
 	Kakao Kakao_t `json:"kakao"`
 }
 
-type News struct {
+type News_t struct {
 	Name    string `json:"name"`
 	Flag    bool   `json:"send_flag"`
 	SendCnt int
 }
 
-type CommCfg struct {
-	SendHour   int    `json:"send_hour"`
-	SendMin    int    `json:"send_min"`
-	MaxSendCnt int    `json:"max_send_cnt"`
-	Media      []News `json:"news"`
+type CommCfg_t struct {
+	SendHour   int      `json:"send_hour"`
+	SendMin    int      `json:"send_min"`
+	MaxSendCnt int      `json:"max_send_cnt"`
+	Media      []News_t `json:"news"`
 }
 
-var Config CommCfg
-var Keys CommKeys
+var Config CommCfg_t
+var Keys CommKeys_t
 
-func ChkSendCnt(m *News) {
+func ChkSendCnt(m *News_t) {
 	m.SendCnt += 1
 	if m.SendCnt >= Config.MaxSendCnt {
 		m.Flag = false
@@ -54,14 +54,14 @@ func ChkSendCnt(m *News) {
 	}
 }
 
-func ResetConfig(m *News) {
+func ResetConfig(m *News_t) {
 	m.Flag = true
 	m.SendCnt = 0
 }
 
 // Load keys from json file
-func LoadKeysConfig() CommKeys {
-	var k CommKeys
+func LoadKeysConfig() CommKeys_t {
+	var k CommKeys_t
 
 	path, _ := filepath.Abs(keyPath)
 	file, err := os.Open(path)
@@ -82,8 +82,8 @@ func LoadKeysConfig() CommKeys {
 }
 
 // Load configuration from json file
-func LoadCommConfig() CommCfg {
-	c := CommCfg{Media: make([]News, 0, 2)}
+func LoadCommConfig() CommCfg_t {
+	c := CommCfg_t{Media: make([]News_t, 0, 2)}
 
 	path, _ := filepath.Abs(configPath)
 	file, err := os.Open(path)
