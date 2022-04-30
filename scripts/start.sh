@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP="scraping-news-go"
-DIR_PATH="/home/leeyw/Documents/github/${APP}"
+DIR_PATH="${HOME}/Documents/github/${APP}"
 
 GOBIN=$DIR_PATH/bin
 
