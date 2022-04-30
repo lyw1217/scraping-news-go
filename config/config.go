@@ -18,11 +18,16 @@ const (
 )
 
 type Kakao_t struct {
-	AppId       string `json:"app_id"`
-	Key         string `json:"key"`
-	Template    string `json:"template"`
-	RedirectUrl string `json:"redirect_url"`
-	Token       string `json:"token"`
+	AppId                 string `json:"app_id"`
+	Key                   string `json:"key"`
+	Template              string `json:"template"`
+	RedirectUrl           string `json:"redirect_url"`
+	AuthCode              string `json:"authorization_code"`
+	AccessToken           string `json:"access_token"`
+	RefreshToken          string `json:"refresh_token"`
+	ExpiresIn             int    `json:"expires_in"`
+	RefreshTokenExpiresIn int    `json:"refresh_token_expires_in"`
+	ClientSecret          string `json:"client_secret"`
 }
 
 type CommKeys_t struct {
@@ -158,6 +163,80 @@ func SetupLogger() {
 	log.Error("===================================================")
 	log.Error(" ")
 	log.Error("< SCRAPER > Successful Logger setup ...............")
+}
+
+func RefreshKeyConfig(k CommKeys_t) {
+	f_chg := false
+
+	if k.Slack != Keys.Slack {
+		Keys.Slack = k.Slack
+		log.Info("Refresh Slack Key")
+		f_chg = true
+	}
+
+	if Keys.Kakao.AppId != k.Kakao.AppId {
+		Keys.Kakao.AppId = k.Kakao.AppId
+		log.Info("Refresh Kakao AppId")
+		f_chg = true
+	}
+	if Keys.Kakao.Key != k.Kakao.Key {
+		Keys.Kakao.Key = k.Kakao.Key
+		log.Info("Refresh Kakao Key")
+		f_chg = true
+	}
+	if Keys.Kakao.RedirectUrl != k.Kakao.RedirectUrl {
+		Keys.Kakao.RedirectUrl = k.Kakao.RedirectUrl
+		log.Info("Refresh Kakao RedirectUrl")
+		f_chg = true
+	}
+	if Keys.Kakao.AuthCode != k.Kakao.AuthCode {
+		Keys.Kakao.AuthCode = k.Kakao.AuthCode
+		log.Info("Refresh Kakao AuthCode")
+		f_chg = true
+	}
+	if Keys.Kakao.AccessToken != k.Kakao.AccessToken {
+		Keys.Kakao.AccessToken = k.Kakao.AccessToken
+		log.Info("Refresh Kakao AccessToken")
+		f_chg = true
+	}
+	if Keys.Kakao.RefreshToken != k.Kakao.RefreshToken {
+		Keys.Kakao.RefreshToken = k.Kakao.RefreshToken
+		log.Info("Refresh Kakao RefreshToken")
+		f_chg = true
+	}
+	if Keys.Kakao.ExpiresIn != k.Kakao.ExpiresIn {
+		Keys.Kakao.ExpiresIn = k.Kakao.ExpiresIn
+		log.Info("Refresh Kakao ExpiresIn")
+		f_chg = true
+	}
+	if Keys.Kakao.RefreshTokenExpiresIn != k.Kakao.RefreshTokenExpiresIn {
+		Keys.Kakao.RefreshTokenExpiresIn = k.Kakao.RefreshTokenExpiresIn
+		log.Info("Refresh Kakao RefreshTokenExpiresIn")
+		f_chg = true
+	}
+	if Keys.Kakao.ClientSecret != k.Kakao.ClientSecret {
+		Keys.Kakao.ClientSecret = k.Kakao.ClientSecret
+		log.Info("Refresh Kakao ClientSecret")
+		f_chg = true
+	}
+
+	if f_chg == true {
+		log.Info("Update keys.json")
+		enc, err := json.MarshalIndent(Keys, "", " ")
+		if err != nil {
+			log.Error(err)
+		}
+
+		path, _ := filepath.Abs(keyPath)
+		f, err := os.Create(path)
+		if err != nil {
+			log.Error(err)
+		}
+		_, err = io.WriteString(f, string(enc))
+		if err != nil {
+			log.Error(err)
+		}
+	}
 }
 
 func init() {
