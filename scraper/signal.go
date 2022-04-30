@@ -6,6 +6,8 @@ import (
 	"syscall"
 	"time"
 
+	"scraping-news/util"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,25 +23,27 @@ func WaitSignal() {
 	exitChan := make(chan int)
 
 	go func() {
-		for !gSysClose {
+		for !sysClose {
 			s := <-signalChan
 
 			switch s.(syscall.Signal) {
 			case 0x01:
-				log.Error("< SCRAPER > Receive < SIGHUP > Signal")
+				log.Info("< SCRAPER > Receive < SIGHUP > Signal")
 
 			case 0x02:
-				log.Error("< SCRAPER > Receive < SIGINT > Signal")
-				gSysClose = true
+				log.Info("< SCRAPER > Receive < SIGINT > Signal")
+				sysClose = true
+				util.SysClose = true
 				exitChan <- 2
 
 			case 0x0f:
-				log.Error("< SCRAPER > Receive < SIGTREM > Signal")
-				gSysClose = true
+				log.Info("< SCRAPER > Receive < SIGTREM > Signal")
+				sysClose = true
+				util.SysClose = true
 				exitChan <- 15
 
 			default:
-				log.Errorf("< SCRAPER > Receive Unknown signal, Sig = '%s(%x)'", s.String(), s.(syscall.Signal))
+				log.Infof("< SCRAPER > Receive Unknown signal, Sig = '%s(%x)'", s.String(), s.(syscall.Signal))
 			}
 		}
 	}()
@@ -49,7 +53,7 @@ func WaitSignal() {
 }
 
 func TerminateHandler(c int) {
-	log.Errorf("< SCRAPER > TERMINATE Handler is called. (reason : %d) ", c)
+	log.Infof("< SCRAPER > TERMINATE Handler is called. (reason : %d) ", c)
 	time.Sleep(time.Duration(3) * time.Second)
 
 	os.Exit(c)
