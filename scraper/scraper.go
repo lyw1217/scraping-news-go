@@ -40,7 +40,7 @@ func requestGetDocument(url string) (*http.Response, error) {
 	// Request 객체 생성
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Println(err, "Err, Failed to NewRequest()")
+		log.Error(err, "Err, Failed to NewRequest()")
 		return nil, err
 	}
 
@@ -48,7 +48,7 @@ func requestGetDocument(url string) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err, "Err, Failed to Get Request")
+		log.Error(err, "Err, Failed to Get Request")
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 	// 1. 매세지 첫 page 목록 조회
 	resp, err := requestGetDocument(list_url)
 	if err != nil {
-		log.Warn(err, "Err, Failed to Get Request")
+		log.Error(err, "Err, Failed to Get Request")
 		return resp.StatusCode, err.Error()
 	}
 	defer resp.Body.Close()
@@ -76,7 +76,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		// HTML Read
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			log.Warn(err, "Err. Failed to NewDocumentFromReader()")
+			log.Error(err, "Err. Failed to NewDocumentFromReader()")
 			return p.StatusCode, err.Error()
 		}
 
@@ -93,7 +93,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 				log.Info(ok, "Err. No Exist href in", p.Links[i].Title)
 				return
 			}
-			fmt.Printf("title = %s, href = %s\n", title, href)
+			//fmt.Printf("title = %s, href = %s\n", title, href)
 			p.AddLinks(title, href)
 		})
 
@@ -104,7 +104,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 				fmt.Printf("Find article(month:%d, day:%d)\n", d_month, d_day)
 				resp_link, err := requestGetDocument(lnk.Url)
 				if err != nil {
-					log.Warn(err, "Err, Failed to Get Request")
+					log.Error(err, "Err, Failed to Get Request")
 					break
 				}
 				defer resp_link.Body.Close()
@@ -112,7 +112,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 				if p.StatusCode = resp_link.StatusCode; p.StatusCode == 200 {
 					html, err := goquery.NewDocumentFromReader(resp_link.Body)
 					if err != nil {
-						log.Warn(err, "Err. Failed to NewDocumentFromReader()")
+						log.Error(err, "Err. Failed to NewDocumentFromReader()")
 						break
 					}
 
@@ -124,7 +124,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 						//content := util.ConvEuckrToUtf8(s.Text())
 						content := util.TransEuckrToUtf8(s.Text())
 						if content == "" {
-							log.Warn("Err. Failed to convert content : ", s.Text())
+							log.Error("Err. Failed to convert content : ", s.Text())
 							return
 						}
 
@@ -132,14 +132,14 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 					})
 
 					if len(p.Contents) == 0 {
-						log.Warn("Err. Failed to get Contents")
+						log.Error("Err. Failed to get Contents")
 						return p.StatusCode, "Err. Failed to get Contents"
 					}
 
 					return p.StatusCode, strings.Join(p.Contents, "")
 
 				} else {
-					log.Warn("Err. Failed to get M.S.G Article.")
+					log.Error("Err. Failed to get M.S.G Article.")
 					return p.StatusCode, "Err. Failed to get M.S.G Article."
 				}
 			}
@@ -148,7 +148,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		return p.StatusCode, fmt.Sprintf("No article on %d-%d", d_month, d_day)
 	}
 
-	log.Warn("Err. Failed to get the M.S.G list.")
+	log.Error("Err. Failed to get the M.S.G list.")
 	return resp.StatusCode, err.Error()
 }
 
@@ -161,7 +161,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	// 1. Issue Today 조회
 	resp, err := requestGetDocument(list_url)
 	if err != nil {
-		log.Warn(err, "Err, Failed to Get Request")
+		log.Error(err, "Err, Failed to Get Request")
 		return resp.StatusCode, err.Error()
 	}
 	defer resp.Body.Close()
@@ -170,30 +170,37 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		// HTML Read
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			log.Warn(err, "Err. Failed to NewDocumentFromReader()")
+			log.Error(err, "Err. Failed to NewDocumentFromReader()")
 			return p.StatusCode, err.Error()
 		}
 
 		// 파싱
-		container := html.Find("td.stb-text-box")
+		//container := html.Find("td.stb-text-box")
+		container := html.Find("div.stb-text-box")
 
 		// text-box 순회하면서 문자열에 추가
 		container.Each(func(i int, s *goquery.Selection) {
 			//content := util.ConvEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
 			content := util.TransEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
 			if content == "" {
-				log.Warn("Err. Failed to convert content : ", s.Text())
+				log.Error("Err. Failed to convert content : ", s.Text())
 				return
 			}
 
 			// https://stackoverflow.com/questions/65533097/replace-nbsp-or-0xao-with-space-in-a-string
 			//content := TransEuckrToUtf8(strings.ReplaceAll(s.Text(), "\u00a0", " "))
-
-			if !(strings.Contains(content, "카카오톡으로 공유하세요")) {
-				p.Contents = append(p.Contents, content)
-			}
+			/*
+				if !(strings.Contains(content, "카카오톡으로 공유하세요")) {
+					p.Contents = append(p.Contents, content)
+				}
+			*/
+			p.Contents = append(p.Contents, content)
 		})
 
+		if len(p.Contents) == 0 {
+			log.Error("Err. Failed to get Contents")
+			return p.StatusCode, "Err. Failed to get Contents"
+		}
 		t_date := strings.Split(p.Contents[0], ".")
 		if len(t_date) >= 3 {
 			t_year, _ := strconv.Atoi(strings.TrimSpace(t_date[0]))
@@ -208,11 +215,11 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 		}
 	}
 
-	log.Warn("Err. Failed to get the Issue Today.")
+	log.Error("Err. Failed to get the Issue Today.")
 	return resp.StatusCode, err.Error()
 }
 
-var gSysClose bool
+var sysClose bool
 
 // start scraping
 func StartScraping() {
@@ -220,7 +227,7 @@ func StartScraping() {
 
 	c := config.Config
 
-	for !gSysClose {
+	for !sysClose {
 		d_month := int(time.Now().Month())
 		d_day := int(time.Now().Day())
 		d_hour := int(time.Now().Hour())
@@ -234,19 +241,19 @@ func StartScraping() {
 					case "hankyung":
 						StatusCode, contents := GetHankyungIssueToday(d_month, d_day)
 						if StatusCode != 200 {
-							log.Warn("Err. news.GetHankyungIssueToday, StatusCode :", StatusCode)
+							log.Error("Err. news.GetHankyungIssueToday, StatusCode :", StatusCode)
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := util.SendMessageToSlack("한국경제 Issue Today", contents); err != nil {
-							log.Warn("Err. slack.SendMessageToSlack")
+							log.Error("Err. slack.SendMessageToSlack")
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
-							log.Warn("Err. KakaoSendToMe")
+							log.Error("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
@@ -258,19 +265,19 @@ func StartScraping() {
 					case "maekyung":
 						StatusCode, contents := GetMaekyungMSG(d_month, d_day)
 						if StatusCode != 200 {
-							log.Warn("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
+							log.Error("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := util.SendMessageToSlack("매일경제 매.세.지", contents); err != nil {
-							log.Warn("Err. slack.SendMessageToSlack")
+							log.Error("Err. slack.SendMessageToSlack")
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
 
 						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
-							log.Warn("Err. KakaoSendToMe")
+							log.Error("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
 						}
@@ -278,7 +285,7 @@ func StartScraping() {
 						log.Info(contents)
 						c.Media[i].Flag = false
 					default:
-						log.Warn("Err. Wrong Key")
+						log.Error("Err. Wrong Key")
 					}
 				}
 			} else if c.SendHour != d_hour {
