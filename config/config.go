@@ -88,7 +88,7 @@ func LoadKeysConfig() CommKeys_t {
 
 // Load configuration from json file
 func LoadCommConfig() CommCfg_t {
-	c := CommCfg_t{Media: make([]News_t, 0, 2)}
+	c := CommCfg_t{Media: make([]News_t, 0, 3)}
 
 	path, _ := filepath.Abs(configPath)
 	file, err := os.Open(path)

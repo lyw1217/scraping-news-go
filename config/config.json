@@ -4,6 +4,7 @@
     "max_send_cnt" : 3,
     "news" : [
         {"name" : "hankyung", "send_flag" : true},
-        {"name" : "maekyung", "send_flag" : true}
+        {"name" : "maekyung", "send_flag" : true},
+        {"name" : "quicknews", "send_flag" : true}
     ]
 }

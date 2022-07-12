@@ -219,6 +219,52 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 	return resp.StatusCode, err.Error()
 }
 
+// scrap Quick News on the date as parameters
+func GetQuickNews(d_month int, d_day int) (int, string) {
+	list_url := QuicknewsUrl
+
+	p := &pageInfo_t{Contents: make([]string, 0, 10)}
+
+	// 1. Issue Today 조회
+	resp, err := requestGetDocument(list_url)
+	if err != nil {
+		log.Error(err, "Err, Failed to Get Request")
+		return resp.StatusCode, err.Error()
+	}
+	defer resp.Body.Close()
+
+	if p.StatusCode = resp.StatusCode; p.StatusCode == 200 {
+		// HTML Read
+		html, err := goquery.NewDocumentFromReader(resp.Body)
+		if err != nil {
+			log.Error(err, "Err. Failed to NewDocumentFromReader()")
+			return p.StatusCode, err.Error()
+		}
+
+		// 파싱
+		container := html.Find("pre#news_0")
+		
+		contents := strings.Split(strings.TrimSpace(container.Text()), "\n")
+
+		if strings.Contains(contents[0], strconv.Itoa(d_month) + "월") && strings.Contains(contents[0], strconv.Itoa(d_day) + "일") {
+			// 주요 경제지표 및 코인가격 삭제
+			var i int
+			for i = range contents {
+				if strings.Contains(contents[i], "----") {
+					break
+				}
+				p.Contents = append(p.Contents, contents[i])
+			}
+			return p.StatusCode, strings.Join(p.Contents, "\r\n")
+		} else {
+			return p.StatusCode, fmt.Sprintf("No article on %d-%d", d_month, d_day)
+		}
+	}
+
+	log.Error("Err. Failed to get the Quick News.")
+	return resp.StatusCode, err.Error()
+}
+
 var sysClose bool
 
 // start scraping
@@ -271,6 +317,30 @@ func StartScraping() {
 						}
 
 						if err := util.SendMessageToSlack("매일경제 매.세.지", contents); err != nil {
+							log.Error("Err. slack.SendMessageToSlack")
+							config.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+							log.Error("Err. KakaoSendToMe")
+							config.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
+						log.Info(contents)
+						c.Media[i].Flag = false
+					
+					// 간추린 아침뉴스
+					case "quicknews":
+						StatusCode, contents := GetQuickNews(d_month, d_day)
+						if StatusCode != 200 {
+							log.Error("Err. news.GetQuickNews, StatusCode :", StatusCode)
+							config.ChkSendCnt(&c.Media[i])
+							continue
+						}
+
+						if err := util.SendMessageToSlack("간추린 아침뉴스", contents); err != nil {
 							log.Error("Err. slack.SendMessageToSlack")
 							config.ChkSendCnt(&c.Media[i])
 							continue
