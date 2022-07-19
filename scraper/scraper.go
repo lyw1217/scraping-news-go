@@ -101,7 +101,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		for _, lnk := range p.Links {
 			if strings.Contains(lnk.Title, strconv.Itoa(d_month)) &&
 				strings.Contains(lnk.Title, strconv.Itoa(d_day)) {
-				fmt.Printf("Find article(month:%d, day:%d)\n", d_month, d_day)
+
 				resp_link, err := requestGetDocument(lnk.Url)
 				if err != nil {
 					log.Error(err, "Err, Failed to Get Request")
