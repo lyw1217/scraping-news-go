@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -68,6 +69,13 @@ func articleQuery(c *gin.Context) {
 func initRoutes() *gin.Engine {
 	r := gin.Default()
 
+	r.GET("/", func(c *gin.Context) {
+		c.String(
+			http.StatusOK,
+			"Hello World. GOSCRAPER!",
+		)
+	})
+
 	r.GET("/maekyung", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, MkMSGUrl)
 	})
@@ -91,7 +99,12 @@ func InitHandler() {
 	routeHttp := initRoutes()
 
 	// HTTP
-	err := routeHttp.Run(":9090")
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Println("Wrong Value of environment : $PORT = '", port, "'")
+		os.Exit(1)
+	}
+	err := routeHttp.Run(":"+port)
 	if err != nil {
 		log.Error("routeHttp.Run: ", err)
 	}
