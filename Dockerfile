@@ -6,26 +6,37 @@ FROM ${BUILD_IMAGE} AS builder
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64
+    GOARCH=amd64 \
+    GIN_MODE=debug \
+    PORT=30200
 
-RUN ["mkdir", "-p", "/build"]
+WORKDIR /usr/src/app
 
-WORKDIR /build
+COPY go.mod go.sum ./
+
+RUN go mod download && go mod verify
 
 COPY . .
 
-RUN ["go", "mod", "vendor"]
-
-RUN ["go", "build", "-o", "/tmp/scraper", "main.go"]
-RUN ["chmod", "+x", "/tmp/scraper"]
+RUN go build -v -o /usr/local/bin/scraper .
 
 FROM ${BASE_IMAGE}
 LABEL AUTHOR Youngwoo Lee (mvl100d@gmail.com)
 
-COPY --chown=0:0 --from=builder /build /build
-COPY --chown=0:0 --from=builder /tmp/scraper /build/
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    GIN_MODE=debug \
+    PORT=30200
 
-WORKDIR /build
+WORKDIR /usr/src/app
 
-RUN ["mkdir", "-p", "log"]
-CMD ["./scraper"]
+COPY --chown=0:0 --from=builder /usr/src/app /usr/src/app
+COPY --chown=0:0 --from=builder /usr/local/bin/scraper /usr/local/bin/scraper
+
+RUN mkdir -p log
+
+EXPOSE ${PORT}
+
+CMD ["scraper"]
