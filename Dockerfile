@@ -6,9 +6,7 @@ FROM ${BUILD_IMAGE} AS builder
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64 \
-    GIN_MODE=debug \
-    PORT=30200
+    GOARCH=amd64
 
 WORKDIR /usr/src/app
 
@@ -28,7 +26,13 @@ ENV GO111MODULE=on \
     GOOS=linux \
     GOARCH=amd64 \
     GIN_MODE=debug \
-    PORT=30200
+    PORT=30200 \
+    TZ=Asia/Seoul
+    
+RUN apk --no-cache add tzdata && \
+	cp /usr/share/zoneinfo/$TZ /etc/localtime && \
+	echo $TZ > /etc/timezone \
+	apk del tzdata
 
 WORKDIR /usr/src/app
 
