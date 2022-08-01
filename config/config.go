@@ -30,9 +30,15 @@ type Kakao_t struct {
 	ClientSecret          string `json:"client_secret"`
 }
 
+type Fcst_t struct {
+	Encoding_key string `json:"encoding_key"`
+	Decoding_key string `json:"decoding_key"`
+}
+
 type CommKeys_t struct {
 	Slack string  `json:"slack_key"` // 구조체 필드에 태그 지정
 	Kakao Kakao_t `json:"kakao"`
+	Fcst  Fcst_t  `json:"vilagefcst"`
 }
 
 type News_t struct {
