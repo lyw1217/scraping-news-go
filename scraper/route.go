@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -54,7 +55,7 @@ func weatherQuery(c *gin.Context) {
 		return
 	}
 
-	// Query : Period
+	// Query : Period, 0: 오늘, 1: 내일
 	p := c.Query("p")
 
 	if len(p) > 0 {
@@ -66,9 +67,13 @@ func weatherQuery(c *gin.Context) {
 			})
 			return
 		}
-		// 최대 24시간 조회 제한
-		if period > 24 {
-			period = 24
+
+		if period > 1 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": http.StatusBadRequest,
+				"reason": "Query p is invalid.",
+			})
+			return
 		}
 
 		type Fcst_t struct {
@@ -78,26 +83,40 @@ func weatherQuery(c *gin.Context) {
 			Value    string `json:"fcstValue"`
 		}
 
-		map_resp := map[int][]Fcst_t{}
-		contents := 0 // 1시간당 12개 item
+		map_resp := []Fcst_t{}
+		item_cnt := 0
 
-		for i := 0; i < period; i++ {
-			for _, v := range resp.Response.Body.Items.Item[contents : contents+12] {
-				cat, val := ParseCode(v.Category, v.FcstValue)
-				map_resp[i] = append(map_resp[i], Fcst_t{v.FcstDate, v.FcstTime, cat, val})
+		now := time.Now()
+		then := now.AddDate(0, 0, period)
+
+		then_date := fmt.Sprintf("%04d%02d%02d", then.Year(), then.Month(), then.Day())
+		then_hour := fmt.Sprintf("%02d00", then.Hour())
+
+		for i, v := range resp.Response.Body.Items.Item {
+			if v.FcstDate == then_date {
+				if v.FcstTime == then_hour {
+					item_cnt = i
+					break
+				}
 			}
-			contents += 12
+		}
+
+		for _, v := range resp.Response.Body.Items.Item[item_cnt : item_cnt+12] {
+			cat, val := ParseCode(v.Category, v.FcstValue)
+			map_resp = append(map_resp, Fcst_t{v.FcstDate, v.FcstTime, cat, val})
 		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":   http.StatusOK,
 			"contents": map_resp,
+			"name":     resp.Response.Body.Name,
 		})
 	} else {
 		// 조회된 전체 기간 (default : 24h)
 		c.JSON(http.StatusOK, gin.H{
 			"status":   http.StatusOK,
 			"contents": resp.Response.Body.Items.Item,
+			"name":     resp.Response.Body.Name,
 		})
 	}
 }

@@ -28,6 +28,7 @@ type ReqVilageFcst_t struct {
 	Base_time  string // 발표시각
 	Nx         string // 예보지점 X 좌표
 	Ny         string // 예보지점 Y 좌표
+	Name       string // 예보지점 이름
 }
 
 type FcstHeader_t struct {
@@ -56,6 +57,7 @@ type FcstBody_t struct {
 	PageNo     int         `json:"pageNo"`
 	NumOfRows  int         `json:"numOfRows"`
 	TotalCount int         `json:"totalCount"`
+	Name       string      `json:"name"`
 }
 
 type FcstResp_t struct {

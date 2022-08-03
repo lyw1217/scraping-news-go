@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -420,27 +421,44 @@ func KeywordVilageSearch(k string, v []VilageInfo_t) []VilageInfo_t {
 // TODO 탐색 속도 개선 필요, 정확한 도시 탐색 개선 필요
 func SearchVilage(keyword []string) []VilageInfo_t {
 	result := make([]VilageInfo_t, 0)
-	fmt.Printf("%d개 키워드 검색\n", len(keyword))
+
 	if len(keyword) > 1 {
 		for i, k := range keyword {
 			// 첫 번째 전체 탐색, 두 번째부터는 결과 내 탐색
+			decodedKey, err := url.QueryUnescape(k)
+			if err != nil {
+				log.Error(err, "Err. Failed to QueryUnescape.")
+				return nil
+			}
+
 			if i == 0 {
 				// 키워드 글자수 2개 이상인 경우 앞의 두 글자만으로 탐색 (서현동 같은 경우 서현1동/서현2동 으로 구분되어 탐색하지 못함)
-				if len(k) > 6 {
-					result = KeywordVilageSearch(k[:6], VilageInfo)
+
+				if len(decodedKey) > 6 {
+					result = KeywordVilageSearch(decodedKey[:6], VilageInfo)
 				} else {
-					result = KeywordVilageSearch(k, VilageInfo)
+					result = KeywordVilageSearch(decodedKey, VilageInfo)
 				}
 			} else {
-				if len(k) > 6 {
-					result = KeywordVilageSearch(k[:6], result)
+				if len(decodedKey) > 6 {
+					result = KeywordVilageSearch(decodedKey[:6], result)
 				} else {
-					result = KeywordVilageSearch(k, result)
+					result = KeywordVilageSearch(decodedKey, result)
 				}
 			}
 		}
 	} else {
-		result = KeywordVilageSearch(keyword[0], VilageInfo)
+		decodedKey, err := url.QueryUnescape(keyword[0])
+		if err != nil {
+			log.Error(err, "Err. Failed to QueryUnescape.")
+			return nil
+		}
+
+		if len(decodedKey) > 6 {
+			result = KeywordVilageSearch(decodedKey[:6], VilageInfo)
+		} else {
+			result = KeywordVilageSearch(decodedKey, VilageInfo)
+		}
 	}
 
 	return result
@@ -467,8 +485,6 @@ func requestFcstApi(url string, r ReqVilageFcst_t) (*ResVilageFcst_t, error) {
 	// '%'가 포함된 문자열을 q.Encode() 시 '%' 문자열이 escape되어서 값이 달라짐
 	req.URL.RawQuery = q.Encode() + fmt.Sprintf("&serviceKey=%s", r.ServiceKey)
 
-	//fmt.Println("Request URL = ", req.URL.String())
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -494,6 +510,8 @@ func requestFcstApi(url string, r ReqVilageFcst_t) (*ResVilageFcst_t, error) {
 		return nil, err
 	}
 
+	parse_resp.Response.Body.Name = r.Name
+
 	return &parse_resp, err
 }
 
@@ -504,17 +522,17 @@ func requestFcstApi(url string, r ReqVilageFcst_t) (*ResVilageFcst_t, error) {
 func calcBaseDateTime(r *ReqVilageFcst_t) {
 	baseTime := []int{2, 5, 8, 11, 14, 17, 20, 23}
 	now := time.Now()
-	now_year := int(now.Year())
-	now_month := int(now.Month())
-	now_day := int(now.Day())
-	now_hour := int(time.Now().Hour())
-	now_minute := int(time.Now().Minute())
+	now_year := now.Year()
+	now_month := now.Month()
+	now_day := now.Day()
+	now_hour := time.Now().Hour()
+	now_minute := time.Now().Minute()
 
 	// 02시 10분 이전, 전날 마지막 정보 조회
 	if now_hour <= baseTime[0] {
 		if now_minute <= 10 {
 			then := now.AddDate(0, 0, -1)
-			r.Base_date = fmt.Sprintf("%04d%02d%02d", int(then.Year()), int(then.Month()), int(int(then.Day())))
+			r.Base_date = fmt.Sprintf("%04d%02d%02d", then.Year(), then.Month(), int(then.Day()))
 			r.Base_time = fmt.Sprintf("%02d00", baseTime[len(baseTime)-1])
 			return
 		}
@@ -661,7 +679,7 @@ func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 	// 키워드 검색
 	v := SearchVilage(keyword)
 	if len(v) <= 0 {
-		fmt.Println("키워드 검색 결과 없음.")
+		fmt.Printf("키워드 %s 검색 결과 없음.\n", keyword)
 		return nil, nil
 	}
 	//fmt.Println(v)
@@ -670,11 +688,12 @@ func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 
 	var r ReqVilageFcst_t
 	r.ServiceKey = config.Keys.Fcst.Encoding_key
-	r.NumOfRows = "288" // default : 10 | 12개 항목당 1시간
+	r.NumOfRows = "360" // default : 10 | 12개 항목당 1시간
 	r.PageNo = "1"      // default : 1
 	r.DataType = "JSON"
 	r.Nx = v[0].X
 	r.Ny = v[0].Y
+	r.Name = fmt.Sprintf("%s %s %s", v[0].Step1, v[0].Step2, v[0].Step3)
 	calcBaseDateTime(&r)
 
 	resp, err := requestFcstApi(VilageFcstUrl, r)
