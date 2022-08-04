@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -18,11 +19,41 @@ import (
 )
 
 var VilageInfo []VilageInfo_t = make([]VilageInfo_t, 0)
+var RssVilageInfo []FcstZone_t = make([]FcstZone_t, 0)
+
+func LoadFcstZoneCode(fileName string) error {
+	var v []FcstZone_t
+
+	path, _ := filepath.Abs(fileName)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		log.Error(err, "Err. Failed to Open file", path)
+		return err
+	}
+	defer f.Close()
+
+	dec := json.NewDecoder(f)
+	err = dec.Decode(&v)
+	if err != nil {
+		log.Error(err, "Err. Failed Decode Json")
+		return err
+	}
+
+	RssVilageInfo = append(RssVilageInfo, v...)
+
+	return nil
+}
 
 func LoadVilageInfo(fileName string, sheetName string) error {
 	var v VilageInfo_t
 
 	path, _ := filepath.Abs(fileName)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return err
+	}
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		log.Error(err)
@@ -63,18 +94,70 @@ func LoadVilageInfo(fileName string, sheetName string) error {
 }
 
 // 도시 정보 키워드 순차 탐색
-func KeywordVilageSearch(k string, v []VilageInfo_t) []VilageInfo_t {
+func KeywordVilageSearch(k string, v []VilageInfo_t, k_count int) []VilageInfo_t {
 	result := make([]VilageInfo_t, 0)
 	for _, val := range v {
-		if strings.Contains(val.Step3, k) || strings.Contains(val.Step2, k) || strings.Contains(val.Step1, k) {
+		if strings.HasPrefix(val.Step3, k) || strings.HasPrefix(val.Step2, k) || strings.HasPrefix(val.Step1, k) {
 			result = append(result, val)
 		}
 	}
+
+	// 전체 글자 탐색 실패한 경우 앞의 두 글자만으로 탐색 (서현동 같은 경우 서현1동/서현2동 으로 구분되어 탐색하지 못함)
+	if len(result) == 0 && k_count <= 1 {
+		k_sub := k[:6] // utf8 한글 한 글자당 3개
+		fmt.Printf("excel 전체(%s) 탐색 실패, (%s)로 재탐색\n", k, k_sub)
+		for _, val := range v {
+			if strings.HasPrefix(val.Step3, k_sub) || strings.HasPrefix(val.Step2, k_sub) || strings.HasPrefix(val.Step1, k_sub) {
+				result = append(result, val)
+			}
+		}
+	}
+
+	return result
+}
+
+func KeywordVilageSearchRSS(k string, v []FcstZone_t, k_count int) []VilageInfo_t {
+
+	result := make([]VilageInfo_t, 0)
+	for _, val := range v {
+		if strings.HasPrefix(val.Step3, k) || strings.HasPrefix(val.Step2, k) || strings.HasPrefix(val.Step1, k) {
+			result = append(result,
+				VilageInfo_t{
+					Step1: val.Step1,
+					Step2: val.Step2,
+					Step3: val.Step3,
+					X:     val.X,
+					Y:     val.Y,
+				},
+			)
+		}
+	}
+
+	// 전체 글자 탐색 실패한 경우 앞의 두 글자만으로 탐색 (서현동 같은 경우 서현1동/서현2동 으로 구분되어 탐색하지 못함)
+	if len(result) == 0 && k_count <= 1 {
+		k_sub := k[:6] // utf8 한글 한 글자당 3개
+		fmt.Printf("rss 전체(%s) 탐색 실패, (%s)로 재탐색\n", k, k_sub)
+		for _, val := range v {
+			if strings.HasPrefix(val.Step3, k_sub) || strings.HasPrefix(val.Step2, k_sub) || strings.HasPrefix(val.Step1, k_sub) {
+				result = append(result,
+					VilageInfo_t{
+						Step1: val.Step1,
+						Step2: val.Step2,
+						Step3: val.Step3,
+						X:     val.X,
+						Y:     val.Y,
+					},
+				)
+			}
+		}
+	}
+
 	return result
 }
 
 // TODO 탐색 속도 개선 필요, 정확한 도시 탐색 개선 필요
-func SearchVilage(keyword []string) []VilageInfo_t {
+/* keyword : string | flag : 0(RSS Search), 1(Excel Search) */
+func SearchVilage(keyword []string, flag int) []VilageInfo_t {
 	result := make([]VilageInfo_t, 0)
 
 	if len(keyword) > 1 {
@@ -87,18 +170,16 @@ func SearchVilage(keyword []string) []VilageInfo_t {
 			}
 
 			if i == 0 {
-				// 키워드 글자수 2개 이상인 경우 앞의 두 글자만으로 탐색 (서현동 같은 경우 서현1동/서현2동 으로 구분되어 탐색하지 못함)
-
-				if len(decodedKey) > 6 {
-					result = KeywordVilageSearch(decodedKey[:6], VilageInfo)
+				if flag == 0 {
+					result = KeywordVilageSearchRSS(decodedKey, RssVilageInfo, len(keyword))
 				} else {
-					result = KeywordVilageSearch(decodedKey, VilageInfo)
+					result = KeywordVilageSearch(decodedKey, VilageInfo, len(keyword))
 				}
 			} else {
-				if len(decodedKey) > 6 {
-					result = KeywordVilageSearch(decodedKey[:6], result)
+				if flag == 0 {
+					result = KeywordVilageSearchRSS(decodedKey, RssVilageInfo, len(keyword))
 				} else {
-					result = KeywordVilageSearch(decodedKey, result)
+					result = KeywordVilageSearch(decodedKey, VilageInfo, len(keyword))
 				}
 			}
 		}
@@ -109,10 +190,12 @@ func SearchVilage(keyword []string) []VilageInfo_t {
 			return nil
 		}
 
-		if len(decodedKey) > 6 {
-			result = KeywordVilageSearch(decodedKey[:6], VilageInfo)
-		} else {
-			result = KeywordVilageSearch(decodedKey, VilageInfo)
+		if len(decodedKey) >= 6 {
+			if flag == 0 {
+				result = KeywordVilageSearchRSS(decodedKey, RssVilageInfo, len(keyword))
+			} else {
+				result = KeywordVilageSearch(decodedKey, VilageInfo, len(keyword))
+			}
 		}
 	}
 
@@ -332,22 +415,42 @@ func ParseCode(category string, value string) (string, string) {
 
 func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 	// 키워드 검색
-	v := SearchVilage(keyword)
-	if len(v) <= 0 {
-		fmt.Printf("키워드 %s 검색 결과 없음.\n", keyword)
-		return nil, nil
-	}
-	//fmt.Println(v)
+	var v []VilageInfo_t
+	v = SearchVilage(keyword, 0)
+	fmt.Printf("RSS 검색 결과 총 %d개의 %s가 검색되었습니다.\n", len(v), keyword)
 
-	fmt.Printf("검색 결과 총 %d개의 %s가 검색되었습니다.\n", len(v), keyword)
+	if len(v) <= 0 {
+		// RSS에 없는 경우, 단기예보 엑셀에서 다시 조회
+		v = SearchVilage(keyword, 1)
+		if len(v) <= 0 {
+			fmt.Printf("키워드 %s 검색 결과 없음.\n", keyword)
+			return nil, nil
+		}
+		fmt.Printf("Excel 검색 결과 총 %d개의 %s가 검색되었습니다.\n", len(v), keyword)
+	}
 
 	var r ReqVilageFcst_t
+
+	if len(v[0].X) > 0 {
+		r.Nx = v[0].X
+		r.Ny = v[0].Y
+	} else {
+		// RSS에 X,Y좌표가 없는 경우, 단기예보 엑셀에서 다시 조회
+		v = SearchVilage(keyword, 1)
+		if len(v) <= 0 {
+			fmt.Printf("키워드 %s 검색 결과 없음.\n", keyword)
+			return nil, nil
+		}
+
+		fmt.Printf("Excel 검색 결과 총 %d개의 %s가 검색되었습니다.\n", len(v), keyword)
+
+		r.Nx = v[0].X
+		r.Ny = v[0].Y
+	}
 	r.ServiceKey = config.Keys.Fcst.Encoding_key
-	r.NumOfRows = "360" // default : 10 | 12개 항목당 1시간
+	r.NumOfRows = "120" // default : 10 | 12개 항목당 1시간
 	r.PageNo = "1"      // default : 1
 	r.DataType = "JSON"
-	r.Nx = v[0].X
-	r.Ny = v[0].Y
 	r.Name = fmt.Sprintf("%s %s %s", v[0].Step1, v[0].Step2, v[0].Step3)
 	calcBaseDateTime(&r)
 
@@ -361,6 +464,135 @@ func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 	}
 
 	return resp, err
+}
+
+func getEachZoneCode(u string, pList FcstZone_t, step int) ([]FcstZone_t, error) {
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		log.Error(err, "Err, Failed to NewRequest()")
+		return nil, err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err, "Err, Failed to Get Request")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err, "Err, Failed to ReadAll")
+		return nil, err
+	}
+
+	parse_resp := []FcstZone_t{}
+	err = json.Unmarshal(body, &parse_resp)
+	if err != nil {
+		log.Error("error decoding response: %v", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Error("syntax error at byte offset %d", e.Offset)
+		}
+		log.Error("response: %q", body)
+		return nil, err
+	}
+
+	switch step {
+	case 1:
+		for i := range parse_resp {
+			parse_resp[i].Step1 = parse_resp[i].Name
+		}
+	case 2:
+		for i := range parse_resp {
+			if len(pList.Step1) > 0 {
+				parse_resp[i].Step1 = pList.Step1
+			}
+			parse_resp[i].Step2 = parse_resp[i].Name
+		}
+	case 3:
+		for i := range parse_resp {
+			if len(pList.Step1) > 0 {
+				parse_resp[i].Step1 = pList.Step1
+			}
+			if len(pList.Step2) > 0 {
+				parse_resp[i].Step2 = pList.Step2
+			}
+			parse_resp[i].Step3 = parse_resp[i].Name
+		}
+	}
+
+	return parse_resp, nil
+}
+
+func GetZoneCode() error {
+	fileName := "./spec/FcstZoneCode.json"
+	err := LoadFcstZoneCode(fileName)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// TOP ZONE
+	topList, err := getEachZoneCode(TopURL, FcstZone_t{}, 1)
+	if err != nil {
+		log.Error(err, "Err. Failed to getEachZoneCode")
+		return err
+	}
+
+	// MID ZONE
+	mdlList := make([]FcstZone_t, 0)
+	for _, v := range topList {
+		qry_url := fmt.Sprintf(MdlURL, v.Code)
+		tmpList, err := getEachZoneCode(qry_url, v, 2)
+		if err != nil {
+			log.Error(err, "Err. Failed to getEachZoneCode")
+			return err
+		}
+		mdlList = append(mdlList, tmpList...)
+		time.Sleep(time.Millisecond * 2)
+	}
+
+	// LEAF ZONE
+	leadList := make([]FcstZone_t, 0)
+	for _, v := range mdlList {
+		qry_url := fmt.Sprintf(LeafURL, v.Code)
+		tmpList, err := getEachZoneCode(qry_url, v, 3)
+		if err != nil {
+			log.Error(err, "Err. Failed to getEachZoneCode")
+			return err
+		}
+		leadList = append(leadList, tmpList...)
+		time.Sleep(time.Millisecond * 2)
+	}
+
+	topList = append(topList, mdlList...)
+	topList = append(topList, leadList...)
+
+	f, err := os.Create("./spec/FcstZoneCode.json")
+	if err != nil {
+		log.Error(err, "Err. Failed to os.Create")
+		return err
+	}
+	defer f.Close()
+	data, err := json.Marshal(topList)
+	if err != nil {
+		log.Error(err, "Err. Failed to Marshal")
+		return err
+	}
+
+	n, err := f.Write(data)
+	if n != len(data) || err != nil {
+		log.Error(err, "Err. Failed to write file")
+		return err
+	}
+
+	fileName = "./spec/FcstZoneCode.json"
+	err = LoadFcstZoneCode(fileName)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return nil
 }
 
 func init() {

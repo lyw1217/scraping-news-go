@@ -68,3 +68,13 @@ type FcstResp_t struct {
 type ResVilageFcst_t struct {
 	Response FcstResp_t `json:"response"`
 }
+
+type FcstZone_t struct {
+	Step1 string `json:"step1"`
+	Step2 string `json:"step2"`
+	Step3 string `json:"step3"`
+	Code  string `json:"code"`
+	Name  string `json:"value"`
+	X     string `json:"x"`
+	Y     string `json:"y"`
+}
