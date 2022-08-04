@@ -108,3 +108,12 @@ Access Token, Refresh Token은 각각 만료 1시간 전에 자동으로 갱신�
  }
 }
 ```
+
+## 🔵 카톡 봇 연동을 위한 API
+
+PORT
+PROXY - 30080
+
+INTERNAL Kube Port
+NEWYO - 30100
+GOSCRAPER - 30200
