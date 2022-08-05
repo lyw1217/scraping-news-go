@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -593,6 +594,48 @@ func GetZoneCode() error {
 	}
 
 	return nil
+}
+
+// 중기예보
+func GetMidtermFcst(mid string) (*ResMidFcst_t, error) {
+
+	req, err := http.NewRequest("GET", MidTermFcstURL, nil)
+	if err != nil {
+		log.Error(err, "Err, Failed to NewRequest()")
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("stnId", MidTermStnIds[mid])
+
+	req.URL.RawQuery = q.Encode()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err, "Err, Failed to Get Request")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err, "Err, Failed to ReadAll")
+		return nil, err
+	}
+
+	parse_resp := ResMidFcst_t{}
+	err = xml.Unmarshal([]byte(body), &parse_resp)
+	if err != nil {
+		log.Error("error decoding response: %v", err)
+		if e, ok := err.(*xml.SyntaxError); ok {
+			log.Error("syntax error.", e.Error())
+		}
+		log.Error("response: %q", body)
+		return nil, err
+	}
+
+	return &parse_resp, nil
 }
 
 func init() {

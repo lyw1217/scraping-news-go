@@ -11,32 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func weatherQuery(c *gin.Context) {
-
-	// Query : Keyword, 검색 키워드(지역명)
-	k1 := c.Query("k1")
-	k2 := c.Query("k2")
-	k3 := c.Query("k3")
-
-	if len(k1) == 0 && len(k2) == 0 && len(k3) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"reason": "Bad Request",
-		})
-		return
-	}
-
-	keywords := make([]string, 0)
-
-	if len(k1) > 0 {
-		keywords = append(keywords, k1)
-	}
-	if len(k2) > 0 {
-		keywords = append(keywords, k2)
-	}
-	if len(k3) > 0 {
-		keywords = append(keywords, k3)
-	}
+func weatherKeyword(c *gin.Context, keywords []string) {
 
 	resp, err := GetVilageFcstInfo(keywords)
 	if err != nil {
@@ -118,6 +93,69 @@ func weatherQuery(c *gin.Context) {
 			"contents": resp.Response.Body.Items.Item,
 			"name":     resp.Response.Body.Name,
 		})
+	}
+}
+
+func weatherMidterm(c *gin.Context, mid string) {
+
+	_, exists := MidTermStnIds[mid]
+	if !exists {
+		// KEY ERROR!
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"reason": "Query mid is invalid.",
+		})
+		return
+	}
+
+	resp, err := GetMidtermFcst(mid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"reason": "Internal Server Error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":   http.StatusOK,
+		"contents": fmt.Sprintf("%s%s", resp.Channel.Item.Title, resp.Channel.Item.Description.Header.Wf),
+	})
+}
+
+func weatherQuery(c *gin.Context) {
+
+	// Query : [mid], midterm forecast, 중기예보 RSS(지역명)
+	mid := c.Query("mid")
+
+	// Query : [k1, k2, k3], Keyword, 검색 키워드(지역명)
+	k1 := c.Query("k1")
+	k2 := c.Query("k2")
+	k3 := c.Query("k3")
+
+	if len(k1) > 0 || len(k2) > 0 || len(k3) > 0 {
+		keywords := make([]string, 0)
+
+		if len(k1) > 0 {
+			keywords = append(keywords, k1)
+		}
+		if len(k2) > 0 {
+			keywords = append(keywords, k2)
+		}
+		if len(k3) > 0 {
+			keywords = append(keywords, k3)
+		}
+		weatherKeyword(c, keywords)
+
+	} else if len(mid) > 0 {
+		weatherMidterm(c, mid)
+
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"reason": "Bad Request",
+		})
+		return
 	}
 }
 

@@ -1,5 +1,7 @@
 package scraper
 
+import "encoding/xml"
+
 type LinkInfo_t struct {
 	Title string
 	Url   string
@@ -77,4 +79,59 @@ type FcstZone_t struct {
 	Name  string `json:"value"`
 	X     string `json:"x"`
 	Y     string `json:"y"`
+}
+
+// made by 'https://www.onlinetool.io/xmltogo/'
+// 불필요 파싱요소 주석처리
+type ResMidFcst_t struct {
+	XMLName xml.Name `xml:"rss"`
+	Text    string   `xml:",chardata"`
+	Version string   `xml:"version,attr"`
+	Channel struct {
+		Text string `xml:",chardata"`
+		//Title       string `xml:"title"`
+		//Link        string `xml:"link"`
+		//Description string `xml:"description"`
+		//Language    string `xml:"language"`
+		//Generator   string `xml:"generator"`
+		PubDate string `xml:"pubDate"`
+		Item    struct {
+			Text string `xml:",chardata"`
+			//Author      string `xml:"author"`
+			//Category    string `xml:"category"`
+			Title string `xml:"title"`
+			//Link        string `xml:"link"`
+			//Guid        string `xml:"guid"`
+			Description struct {
+				Text   string `xml:",chardata"`
+				Header struct {
+					Text  string `xml:",chardata"`
+					Title string `xml:"title"`
+					Tm    string `xml:"tm"`
+					Wf    string `xml:"wf"`
+				} `xml:"header"`
+				/*
+					Body struct {
+						Text     string `xml:",chardata"`
+						Location []struct {
+							Text     string `xml:",chardata"`
+							WlVer    string `xml:"wl_ver,attr"`
+							Province string `xml:"province"`
+							City     string `xml:"city"`
+							Data     []struct {
+								Text        string `xml:",chardata"`
+								Mode        string `xml:"mode"`
+								TmEf        string `xml:"tmEf"`
+								Wf          string `xml:"wf"`
+								Tmn         string `xml:"tmn"`
+								Tmx         string `xml:"tmx"`
+								Reliability string `xml:"reliability"`
+								RnSt        string `xml:"rnSt"`
+							} `xml:"data"`
+						} `xml:"location"`
+					} `xml:"body"`
+				*/
+			} `xml:"description"`
+		} `xml:"item"`
+	} `xml:"channel"`
 }
