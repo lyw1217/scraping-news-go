@@ -35,10 +35,16 @@ type Fcst_t struct {
 	Decoding_key string `json:"decoding_key"`
 }
 
+type Naver_t struct {
+	ClientId 	string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
 type CommKeys_t struct {
 	Slack string  `json:"slack_key"` // 구조체 필드에 태그 지정
 	Kakao Kakao_t `json:"kakao"`
 	Fcst  Fcst_t  `json:"vilagefcst"`
+	Naver Naver_t `json:"naver"`
 }
 
 type News_t struct {
@@ -226,7 +232,7 @@ func RefreshKeyConfig(k CommKeys_t) {
 		f_chg = true
 	}
 
-	if f_chg == true {
+	if f_chg {
 		log.Info("Update keys.json")
 		enc, err := json.MarshalIndent(Keys, "", " ")
 		if err != nil {

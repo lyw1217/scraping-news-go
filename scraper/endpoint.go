@@ -15,6 +15,9 @@ const (
 
 	// 기상청 중기예보 RSS
 	MidTermFcstURL string = "https://www.kma.go.kr/weather/forecast/mid-term-rss3.jsp"
+
+	// 네이버 로마자 한글 변환
+	RomanizationURL string = "https://openapi.naver.com/v1/krdict/romanization"
 )
 
 var MidTermStnIds = map[string]string{

@@ -462,6 +462,7 @@ func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 
 	if resp.Response.Header.ResultCode != "00" {
 		log.Error(err, "ResultCode(", resp.Response.Header.ResultCode, ") is not Normal. ")
+		return nil, err
 	}
 
 	return resp, err

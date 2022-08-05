@@ -1,126 +1,38 @@
 package scraper
 
 import (
-	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-func weatherKeyword(c *gin.Context, keywords []string) {
-
-	resp, err := GetVilageFcstInfo(keywords)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": http.StatusInternalServerError,
-			"reason": "Internal Server Error",
-		})
-		return
-	}
-	// 키워드 조회 결과 없음
-	if resp == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"status": http.StatusNotFound,
-			"reason": "Not Found",
-		})
-		return
-	}
-
-	// Query : Period, 0: 오늘, 1: 내일
-	p := c.Query("p")
-
-	if len(p) > 0 {
-		period, err := strconv.Atoi(p)
+func romanizationQuery(c *gin.Context) {
+	// Query : query, 로마자로 변환할 한글 이름
+	query := c.Query("query")
+	if len(query) > 0 {
+		resp, err := GetPapagoRomanization(c, query)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"status": http.StatusBadRequest,
-				"reason": "Query p is not integer.",
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": http.StatusInternalServerError,
+				"reason": "Internal Server Error",
 			})
 			return
-		}
-
-		if period > 1 {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"status": http.StatusBadRequest,
-				"reason": "Query p is invalid.",
-			})
-			return
-		}
-
-		type Fcst_t struct {
-			FcstDate string `json:"fcstDate"`
-			FcstTime string `json:"fcstTime"`
-			Category string `json:"category"`
-			Value    string `json:"fcstValue"`
-		}
-
-		map_resp := []Fcst_t{}
-		item_cnt := 0
-
-		now := time.Now()
-		then := now.AddDate(0, 0, period)
-
-		then_date := fmt.Sprintf("%04d%02d%02d", then.Year(), then.Month(), then.Day())
-		then_hour := fmt.Sprintf("%02d00", then.Hour())
-
-		for i, v := range resp.Response.Body.Items.Item {
-			if v.FcstDate == then_date {
-				if v.FcstTime == then_hour {
-					item_cnt = i
-					break
-				}
-			}
-		}
-
-		for _, v := range resp.Response.Body.Items.Item[item_cnt : item_cnt+12] {
-			cat, val := ParseCode(v.Category, v.FcstValue)
-			map_resp = append(map_resp, Fcst_t{v.FcstDate, v.FcstTime, cat, val})
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"status":   http.StatusOK,
-			"contents": map_resp,
-			"name":     resp.Response.Body.Name,
+			"status": http.StatusOK,
+			"contents": resp.AResult[0].AItems,
 		})
 	} else {
-		// 조회된 전체 기간 (default : 24h)
-		c.JSON(http.StatusOK, gin.H{
-			"status":   http.StatusOK,
-			"contents": resp.Response.Body.Items.Item,
-			"name":     resp.Response.Body.Name,
-		})
-	}
-}
-
-func weatherMidterm(c *gin.Context, mid string) {
-
-	_, exists := MidTermStnIds[mid]
-	if !exists {
-		// KEY ERROR!
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": http.StatusBadRequest,
-			"reason": "Query mid is invalid.",
+			"reason": "Bad Request",
 		})
 		return
 	}
-
-	resp, err := GetMidtermFcst(mid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": http.StatusInternalServerError,
-			"reason": "Internal Server Error",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":   http.StatusOK,
-		"contents": fmt.Sprintf("%s%s", resp.Channel.Item.Title, resp.Channel.Item.Description.Header.Wf),
-	})
 }
 
 func weatherQuery(c *gin.Context) {
@@ -241,6 +153,8 @@ func initRoutes() *gin.Engine {
 	r.GET("/article", articleQuery)
 
 	r.GET("/weather", weatherQuery)
+
+	r.GET("/romanization", romanizationQuery)
 
 	return r
 }

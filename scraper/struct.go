@@ -135,3 +135,16 @@ type ResMidFcst_t struct {
 		} `xml:"item"`
 	} `xml:"channel"`
 }
+
+
+type ResRoman_t struct {
+	AResult []AResult `json:"aResult"`
+}
+type AItems struct {
+	Name  string `json:"name"`
+	Score string `json:"score"`
+}
+type AResult struct {
+	SFirstName string   `json:"sFirstName"`
+	AItems     []AItems `json:"aItems"`
+}
