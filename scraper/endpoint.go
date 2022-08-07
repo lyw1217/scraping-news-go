@@ -18,6 +18,10 @@ const (
 
 	// 네이버 로마자 한글 변환
 	RomanizationURL string = "https://openapi.naver.com/v1/krdict/romanization"
+	// 네이버 파파고 번역
+	PapagoURL string = "https://openapi.naver.com/v1/papago/n2mt"
+	// 네이버 언어 감지
+	DetectLangURL string = "https://openapi.naver.com/v1/papago/detectLangs"
 )
 
 var MidTermStnIds = map[string]string{

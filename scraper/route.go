@@ -9,11 +9,61 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func papagoQuery(c *gin.Context) {
+	// 언어 감지
+	// Query : text, 어떤 언어인지 확인할 텍스트
+	text := c.Query("text")
+
+	if len(text) > 0 || len(text) <= 5000 {
+		langCode, err := PostDetectLangs(text)
+		if err != nil {
+			log.Error(err, " Err. failed to PostDetectLangs")
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": http.StatusInternalServerError,
+				"reason": "Internal Server Error",
+			})
+			return
+		}
+
+		// 파파고 번역
+		if len(langCode) > 0 {
+			resp, err := PostPapagoTrans(langCode, text)
+			if err != nil {
+				log.Error(err, " Err. failed to PostPapagoTrans")
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"status": http.StatusInternalServerError,
+					"reason": "Internal Server Error",
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": http.StatusOK,
+				"contents": resp.Message.Result.TranslatedText,
+			})
+			return
+		} else {
+			log.Error("Err. failed to GetDetectLangs")
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": http.StatusInternalServerError,
+				"reason": "Internal Server Error",
+			})
+			return
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"reason": "Bad Request",
+		})
+		return
+	}
+}
+
 func romanizationQuery(c *gin.Context) {
 	// Query : query, 로마자로 변환할 한글 이름
 	query := c.Query("query")
 	if len(query) > 0 {
-		resp, err := GetPapagoRomanization(c, query)
+		resp, err := GetPapagoRomanization(query)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status": http.StatusInternalServerError,
@@ -22,10 +72,19 @@ func romanizationQuery(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": http.StatusOK,
-			"contents": resp.AResult[0].AItems,
-		})
+		if len(resp.AResult) > 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"status": http.StatusOK,
+				"contents": resp.AResult[0].AItems,
+			})
+			return
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": http.StatusBadRequest,
+				"reason": "Bad Request",
+			})
+			return
+		}
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": http.StatusBadRequest,
@@ -155,6 +214,8 @@ func initRoutes() *gin.Engine {
 	r.GET("/weather", weatherQuery)
 
 	r.GET("/romanization", romanizationQuery)
+
+	r.POST("/papago", papagoQuery)
 
 	return r
 }

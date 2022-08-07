@@ -2,11 +2,13 @@ package scraper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"scraping-news/config"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -126,7 +128,7 @@ func weatherMidterm(c *gin.Context, mid string) {
 	})
 }
 
-func GetPapagoRomanization(c *gin.Context, query string) (*ResRoman_t, error) {
+func GetPapagoRomanization(query string) (*ResRoman_t, error) {
 	req, err := http.NewRequest("GET", RomanizationURL, nil)
 	if err != nil {
 		log.Error(err, "Err, Failed to NewRequest()")
@@ -164,6 +166,127 @@ func GetPapagoRomanization(c *gin.Context, query string) (*ResRoman_t, error) {
 		}
 		log.Error("response: ", string(body))
 		return nil, err
+	}
+
+	if len(parse_resp.ErrorCode) > 0 {
+		log.Error("Err. Failed to Romanization API")
+		return nil, errors.New(parse_resp.ErrorMessage)
+	}
+
+	return &parse_resp, nil
+}
+
+func PostDetectLangs(query string) (string, error) {
+	req, err := http.NewRequest("POST", DetectLangURL, nil)
+	if err != nil {
+		log.Error(err, "Err, Failed to NewRequest()")
+		return "", err
+	}
+
+	q := req.URL.Query()
+	q.Add("query", query)
+
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("X-Naver-Client-Id", config.Keys.Naver.ClientId)
+	req.Header.Set("X-Naver-Client-Secret", config.Keys.Naver.ClientSecret)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err, "Err, Failed to Post Request")
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New(resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err, "Err, Failed to ReadAll")
+		return "", err
+	}
+
+	parse_resp := ResLangCode_t{}
+	err = json.Unmarshal([]byte(body), &parse_resp)
+	if err != nil {
+		log.Error("error decoding response: ", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Error("syntax error.", e.Error())
+		}
+		log.Error("response: ", string(body))
+		return "", err
+	}
+
+	if len(parse_resp.ErrorCode) > 0 {
+		log.Error("Err. Failed to DetectLang API")
+		return "", errors.New(parse_resp.ErrorMessage)
+	}
+
+	return parse_resp.LangCode, nil
+}
+
+func PostPapagoTrans(langCode string, text string) (*ResPapago_t, error) {
+	req, err := http.NewRequest("POST", PapagoURL, nil)
+	if err != nil {
+		log.Error(err, "Err, Failed to NewRequest()")
+		return nil, err
+	}
+
+	// 만약 한글이면 영어로
+	// 다른 언어면 한글로 번역
+	var target string
+	if strings.Compare(langCode, "ko") == 0 {
+		target = "en"
+	} else {
+		target = "ko"
+	}
+
+	q := req.URL.Query()
+	q.Add("text", text)
+	q.Add("target", target)
+	q.Add("source", langCode)
+
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("X-Naver-Client-Id", config.Keys.Naver.ClientId)
+	req.Header.Set("X-Naver-Client-Secret", config.Keys.Naver.ClientSecret)
+
+	fmt.Println("req url = ", req.URL.String())
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err, "Err, Failed to Post Request")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err, "Err, Failed to ReadAll")
+		return nil, err
+	}
+
+	parse_resp := ResPapago_t{}
+	err = json.Unmarshal([]byte(body), &parse_resp)
+	if err != nil {
+		log.Error("error decoding response: ", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Error("syntax error.", e.Error())
+		}
+		log.Error("response: ", string(body))
+		return nil, err
+	}
+
+	if len(parse_resp.ErrorCode) > 0 {
+		log.Error("Err. Failed to Papago API")
+		return nil, errors.New(parse_resp.ErrorMessage)
 	}
 
 	return &parse_resp, nil

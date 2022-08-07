@@ -136,15 +136,35 @@ type ResMidFcst_t struct {
 	} `xml:"channel"`
 }
 
-
 type ResRoman_t struct {
-	AResult []AResult `json:"aResult"`
+	AResult []struct {
+		SFirstName string `json:"sFirstName"`
+		AItems     []struct {
+			Name  string `json:"name"`
+			Score string `json:"score"`
+		} `json:"aItems"`
+	} `json:"aResult"`
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
 }
-type AItems struct {
-	Name  string `json:"name"`
-	Score string `json:"score"`
+
+type ResLangCode_t struct {
+	LangCode     string `json:"langCode"`
+	ErrorMessage string `json:"errorMessage"`
+	ErrorCode    string `json:"errorCode"`
 }
-type AResult struct {
-	SFirstName string   `json:"sFirstName"`
-	AItems     []AItems `json:"aItems"`
+
+type ResPapago_t struct {
+	Message struct {
+		Type    string `json:"@type"`
+		Service string `json:"@service"`
+		Version string `json:"@version"`
+		Result  struct {
+			SrcLangType    string `json:"srcLangType"`
+			TarLangType    string `json:"tarLangType"`
+			TranslatedText string `json:"translatedText"`
+		} `json:"result"`
+	} `json:"message"`
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
 }
