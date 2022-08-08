@@ -1,8 +1,11 @@
 package scraper
 
 import (
+	b64 "encoding/base64"
 	"net/http"
 	"os"
+	"scraping-news/config"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +13,15 @@ import (
 )
 
 func papagoQuery(c *gin.Context) {
+	auth := c.Query("auth")
+	if !checkAuth(auth) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": http.StatusUnauthorized,
+			"reason": "Unauthorized API Key",
+		})
+		return
+	}
+
 	// 언어 감지
 	// Query : text, 어떤 언어인지 확인할 텍스트
 	text := c.Query("text")
@@ -60,6 +72,15 @@ func papagoQuery(c *gin.Context) {
 }
 
 func romanizationQuery(c *gin.Context) {
+	auth := c.Query("auth")
+	if !checkAuth(auth) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": http.StatusUnauthorized,
+			"reason": "Unauthorized API Key",
+		})
+		return
+	}
+
 	// Query : query, 로마자로 변환할 한글 이름
 	query := c.Query("query")
 	if len(query) > 0 {
@@ -95,6 +116,14 @@ func romanizationQuery(c *gin.Context) {
 }
 
 func weatherQuery(c *gin.Context) {
+	auth := c.Query("auth")
+	if !checkAuth(auth) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": http.StatusUnauthorized,
+			"reason": "Unauthorized API Key",
+		})
+		return
+	}
 
 	// Query : [mid], midterm forecast, 중기예보 RSS(지역명)
 	mid := c.Query("mid")
@@ -131,6 +160,15 @@ func weatherQuery(c *gin.Context) {
 }
 
 func articleQuery(c *gin.Context) {
+	auth := c.Query("auth")
+	if !checkAuth(auth) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": http.StatusUnauthorized,
+			"reason": "Unauthorized API Key",
+		})
+		return
+	}
+
 	d_month := int(time.Now().Month())
 	d_day := int(time.Now().Day())
 
@@ -196,6 +234,15 @@ func articleQuery(c *gin.Context) {
 			"status": http.StatusBadRequest,
 			"reason": "Bad Request",
 		})
+	}
+}
+
+func checkAuth(key string) bool {
+	sDec, _ := b64.StdEncoding.DecodeString(key)
+	if strings.Compare(strings.Trim(string(sDec), " "), config.Keys.Newyo.Apikey) == 0 {
+		return true
+	} else {
+		return false
 	}
 }
 

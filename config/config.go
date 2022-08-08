@@ -36,8 +36,12 @@ type Fcst_t struct {
 }
 
 type Naver_t struct {
-	ClientId 	string `json:"client_id"`
+	ClientId     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
+}
+
+type Newyo_t struct {
+	Apikey string `json:"apikey"`
 }
 
 type CommKeys_t struct {
@@ -45,6 +49,7 @@ type CommKeys_t struct {
 	Kakao Kakao_t `json:"kakao"`
 	Fcst  Fcst_t  `json:"vilagefcst"`
 	Naver Naver_t `json:"naver"`
+	Newyo Newyo_t `json:"newyo"`
 }
 
 type News_t struct {
