@@ -3,11 +3,6 @@ ARG BASE_IMAGE=alpine:3.15
 
 FROM ${BUILD_IMAGE} AS builder
 
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64
-
 WORKDIR /usr/src/app
 
 COPY go.mod go.sum ./
@@ -21,11 +16,7 @@ RUN go build -v -o /usr/local/bin/scraper .
 FROM ${BASE_IMAGE}
 LABEL AUTHOR Youngwoo Lee (mvl100d@gmail.com)
 
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64 \
-    GIN_MODE=debug \
+ENV GIN_MODE=debug \
     PORT=30200 \
     TZ=Asia/Seoul
     
