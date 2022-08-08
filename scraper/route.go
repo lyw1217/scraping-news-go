@@ -38,7 +38,7 @@ func papagoQuery(c *gin.Context) {
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"status": http.StatusOK,
+				"status":   http.StatusOK,
 				"contents": resp.Message.Result.TranslatedText,
 			})
 			return
@@ -74,7 +74,7 @@ func romanizationQuery(c *gin.Context) {
 
 		if len(resp.AResult) > 0 {
 			c.JSON(http.StatusOK, gin.H{
-				"status": http.StatusOK,
+				"status":   http.StatusOK,
 				"contents": resp.AResult[0].AItems,
 			})
 			return
@@ -142,6 +142,10 @@ func articleQuery(c *gin.Context) {
 			StatusCode, contents := GetHankyungIssueToday(d_month, d_day)
 			if StatusCode != http.StatusOK {
 				log.Error("Err. news.GetHankyungIssueToday, StatusCode :", StatusCode)
+				c.JSON(StatusCode, gin.H{
+					"status": StatusCode,
+					"reason": contents,
+				})
 				break
 			}
 
@@ -154,6 +158,10 @@ func articleQuery(c *gin.Context) {
 			StatusCode, contents := GetMaekyungMSG(d_month, d_day)
 			if StatusCode != http.StatusOK {
 				log.Error("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
+				c.JSON(StatusCode, gin.H{
+					"status": StatusCode,
+					"reason": contents,
+				})
 				break
 			}
 
@@ -166,6 +174,10 @@ func articleQuery(c *gin.Context) {
 			StatusCode, contents := GetQuickNews(d_month, d_day)
 			if StatusCode != http.StatusOK {
 				log.Error("Err. news.GetQuickNews, StatusCode :", StatusCode)
+				c.JSON(StatusCode, gin.H{
+					"status": StatusCode,
+					"reason": contents,
+				})
 				break
 			}
 
