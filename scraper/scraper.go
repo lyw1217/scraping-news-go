@@ -88,8 +88,8 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 		// 날짜에 맞는 article 확인
 		for _, lnk := range p.Links {
-			if strings.Contains(lnk.Title, strconv.Itoa(d_month)) &&
-				strings.Contains(lnk.Title, strconv.Itoa(d_day)) {
+			if strings.Contains(lnk.Title, strconv.Itoa(d_month)+"월") &&
+				strings.Contains(lnk.Title, strconv.Itoa(d_day)+"일") {
 
 				resp_link, err := requestGetDocument(lnk.Url)
 				if err != nil {
@@ -134,7 +134,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 			}
 		}
 
-		return p.StatusCode, fmt.Sprintf("No article on %d-%d", d_month, d_day)
+		return http.StatusNotFound, fmt.Sprintf("No article %d-%d", d_month, d_day)
 	}
 
 	log.Error("Err. Failed to get the M.S.G list.")
@@ -199,7 +199,7 @@ func GetHankyungIssueToday(d_month int, d_day int) (int, string) {
 			if d_month == t_month && d_day == t_day {
 				return p.StatusCode, strings.Join(p.Contents, "\r\n")
 			} else {
-				return p.StatusCode, fmt.Sprintf("No article on %d-%d-%d", t_year, d_month, d_day)
+				return http.StatusNotFound, fmt.Sprintf("No article %d-%d-%d", t_year, d_month, d_day)
 			}
 		}
 	}
@@ -246,7 +246,7 @@ func GetQuickNews(d_month int, d_day int) (int, string) {
 			}
 			return p.StatusCode, strings.Join(p.Contents, "\r\n")
 		} else {
-			return p.StatusCode, fmt.Sprintf("No article on %d-%d", d_month, d_day)
+			return http.StatusNotFound, fmt.Sprintf("No article %d-%d", d_month, d_day)
 		}
 	}
 
