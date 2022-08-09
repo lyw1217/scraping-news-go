@@ -1,5 +1,6 @@
-ARG BUILD_IMAGE=golang:1.18-alpine3.15
-ARG BASE_IMAGE=alpine:3.15
+ARG ARCH=
+ARG BUILD_IMAGE=${ARCH}golang:1.18-alpine3.15
+ARG BASE_IMAGE=${ARCH}alpine:3.15
 
 FROM ${BUILD_IMAGE} AS builder
 
