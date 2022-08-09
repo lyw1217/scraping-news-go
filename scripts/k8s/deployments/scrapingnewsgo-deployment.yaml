@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrapingnewsgo-deployment
+  namespace: test
+  labels:
+    app: scrapingnewsgo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: scrapingnewsgo
+  template:
+    metadata:
+      labels:
+        app: scrapingnewsgo
+    spec:
+      containers:
+      - name: scrapingnewsgo
+        image: lyw1217/scrapingnewsgo:latest
+        env:
+        - name: "PORT"
+          value: "30200"
+        ports:
+        - containerPort: 30200
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
