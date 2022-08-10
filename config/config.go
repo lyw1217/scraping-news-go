@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json" // https://pkg.go.dev/encoding/json
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -161,6 +162,12 @@ func SetupLogger() {
 		log.Println(err)
 		return
 	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Error(err, "Err. Failed to get Hostname")
+	}
+	l.Filename = fmt.Sprintf(l.Filename, hostname)
 
 	// Fork writing into two outputs
 	multiWriter := io.MultiWriter(os.Stderr, l) // Stderr와 파일에 동시  출력
