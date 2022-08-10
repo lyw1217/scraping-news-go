@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	keyPath     string = "./config/keys.json"
-	configPath  string = "./config/config.json"
-	loggingPath string = "./config/logging.json"
+	keyPath     string = "./cfg/keys.json"
+	configPath  string = "./cfg/config.json"
+	loggingPath string = "./cfg/logging.json"
 )
 
 type Kakao_t struct {
