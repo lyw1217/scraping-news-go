@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	keyPath     string = "./cfg/keys.json"
-	configPath  string = "./cfg/config.json"
-	loggingPath string = "./cfg/logging.json"
+	keyPath     string = "%s/cfg/keys.json"
+	configPath  string = "%s/cfg/config.json"
+	loggingPath string = "%s/cfg/logging.json"
 )
 
 type Kakao_t struct {
@@ -86,7 +86,7 @@ func ResetConfig(m *News_t) {
 func LoadKeysConfig() CommKeys_t {
 	var k CommKeys_t
 
-	path, _ := filepath.Abs(keyPath)
+	path, _ := filepath.Abs(fmt.Sprintf(keyPath, os.Getenv("SCRAP_HOME")))
 	file, err := os.Open(path)
 	if err != nil {
 		log.Println(err)
@@ -108,7 +108,7 @@ func LoadKeysConfig() CommKeys_t {
 func LoadCommConfig() CommCfg_t {
 	c := CommCfg_t{Media: make([]News_t, 0, 3)}
 
-	path, _ := filepath.Abs(configPath)
+	path, _ := filepath.Abs(fmt.Sprintf(configPath, os.Getenv("SCRAP_HOME")))
 	file, err := os.Open(path)
 	if err != nil {
 		log.Println(err)
@@ -146,7 +146,7 @@ log.Panic("I'm bailing.")
 
 // setup logger
 func SetupLogger() {
-	path, _ := filepath.Abs(loggingPath)
+	path, _ := filepath.Abs(fmt.Sprintf(loggingPath, os.Getenv("SCRAP_HOME")))
 	file, err := os.Open(path)
 	if err != nil {
 		log.Println(err)
