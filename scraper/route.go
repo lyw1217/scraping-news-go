@@ -193,7 +193,7 @@ func articleQuery(c *gin.Context) {
 			})
 
 		case "maekyung":
-			StatusCode, contents := GetMaekyungMSG(d_month, d_day)
+			StatusCode, contents, _ := GetMaekyungMSG(d_month, d_day)
 			if StatusCode != http.StatusOK {
 				log.Error("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
 				c.JSON(StatusCode, gin.H{

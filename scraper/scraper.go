@@ -45,7 +45,7 @@ func requestGetDocument(url string) (*http.Response, error) {
 }
 
 // scrap maekyung M.S.G on the date as parameters
-func GetMaekyungMSG(d_month int, d_day int) (int, string) {
+func GetMaekyungMSG(d_month int, d_day int) (int, string, string) {
 	list_url := MkMSGUrl
 
 	p := &PageInfo_t{
@@ -57,7 +57,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 	resp, err := requestGetDocument(list_url)
 	if err != nil {
 		log.Error(err, "Err, Failed to Get Request")
-		return resp.StatusCode, err.Error()
+		return resp.StatusCode, err.Error(), ""
 	}
 	defer resp.Body.Close()
 
@@ -66,7 +66,7 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 		html, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			log.Error(err, "Err. Failed to NewDocumentFromReader()")
-			return p.StatusCode, err.Error()
+			return p.StatusCode, err.Error(), ""
 		}
 
 		// 파싱
@@ -122,23 +122,23 @@ func GetMaekyungMSG(d_month int, d_day int) (int, string) {
 
 					if len(p.Contents) == 0 {
 						log.Error("Err. Failed to get Contents")
-						return p.StatusCode, "Err. Failed to get Contents"
+						return p.StatusCode, "Err. Failed to get Contents", ""
 					}
 
-					return p.StatusCode, strings.Join(p.Contents, "")
+					return p.StatusCode, strings.Join(p.Contents, ""), lnk.Url
 
 				} else {
 					log.Error("Err. Failed to get M.S.G Article.")
-					return p.StatusCode, "Err. Failed to get M.S.G Article."
+					return p.StatusCode, "Err. Failed to get M.S.G Article.", ""
 				}
 			}
 		}
 
-		return http.StatusNotFound, fmt.Sprintf("No article %d-%d", d_month, d_day)
+		return http.StatusNotFound, fmt.Sprintf("No article %d-%d", d_month, d_day), ""
 	}
 
 	log.Error("Err. Failed to get the M.S.G list.")
-	return resp.StatusCode, err.Error()
+	return resp.StatusCode, err.Error(), ""
 }
 
 // scrap hankyung issue today on the date as a parameters
@@ -287,7 +287,7 @@ func StartScraping() {
 							continue
 						}
 
-						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+HkIssueTodayUrl); err != nil {
 							log.Error("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
@@ -298,7 +298,7 @@ func StartScraping() {
 
 					// 매일 경제
 					case "maekyung":
-						StatusCode, contents := GetMaekyungMSG(d_month, d_day)
+						StatusCode, contents, redirect_url := GetMaekyungMSG(d_month, d_day)
 						if StatusCode != 200 {
 							log.Error("Err. news.GetMaekyungMSG, StatusCode :", StatusCode)
 							config.ChkSendCnt(&c.Media[i])
@@ -311,7 +311,7 @@ func StartScraping() {
 							continue
 						}
 
-						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+redirect_url); err != nil {
 							log.Error("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
@@ -335,7 +335,7 @@ func StartScraping() {
 							continue
 						}
 
-						if err := util.KakaoSendToMe(media.Name, contents, HostName+media.Name); err != nil {
+						if err := util.KakaoSendToMe(media.Name, contents, HostName+QuicknewsUrl); err != nil {
 							log.Error("Err. KakaoSendToMe")
 							config.ChkSendCnt(&c.Media[i])
 							continue
