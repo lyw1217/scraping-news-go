@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.10.0
+	github.com/xuri/excelize/v2 v2.6.0
 	golang.org/x/text v0.3.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
@@ -32,7 +33,6 @@ require (
 	github.com/richardlehane/msoleps v1.0.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/xuri/efp v0.0.0-20220407160117-ad0f7a785be8 // indirect
-	github.com/xuri/excelize/v2 v2.6.0 // indirect
 	github.com/xuri/nfp v0.0.0-20220409054826-5e722a1d9e22 // indirect
 	golang.org/x/crypto v0.0.0-20220408190544-5352b0902921 // indirect
 	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
