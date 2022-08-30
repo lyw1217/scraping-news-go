@@ -288,7 +288,7 @@ func calcBaseDateTime(r *ReqVilageFcst_t) {
 			} else {
 				// 제공시간 이후
 				r.Base_date = fmt.Sprintf("%04d%02d%02d", now_year, now_month, now_day)
-				r.Base_time = fmt.Sprintf("%02d00", baseTime[i-1])
+				r.Base_time = fmt.Sprintf("%02d00", baseTime[i])
 				return
 			}
 		}
@@ -461,7 +461,7 @@ func GetVilageFcstInfo(keyword []string) (*ResVilageFcst_t, error) {
 	}
 
 	if resp.Response.Header.ResultCode != "00" {
-		log.Error(err, "ResultCode(", resp.Response.Header.ResultCode, ") is not Normal. ")
+		log.Error(err, "ResultCode(", resp.Response.Header.ResultCode, ") is not Normal. ResultMsg = " + resp.Response.Header.ResultMsg)
 		return nil, err
 	}
 
