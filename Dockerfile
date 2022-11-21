@@ -6,18 +6,20 @@ FROM ${BUILD_IMAGE} AS builder
 
 WORKDIR /usr/src/app
 
-COPY go.mod go.sum ./
+COPY . .
 
 RUN go mod download && go mod verify
 
-COPY . .
-
 RUN go build -v -o /usr/local/bin/scraper .
+
+WORKDIR /usr/src
+RUN tar -cvf app.tar ./app
 
 FROM ${BASE_IMAGE}
 LABEL AUTHOR Youngwoo Lee (mvl100d@gmail.com)
 
 ENV GIN_MODE=debug \
+	SCRAP_HOME=/usr/src/app \
     PORT=30200 \
     TZ=Asia/Seoul
     
@@ -26,13 +28,12 @@ RUN apk --no-cache add tzdata && \
 	echo $TZ > /etc/timezone \
 	apk del tzdata
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src
 
-COPY --chown=0:0 --from=builder /usr/src/app /usr/src/app
-COPY --chown=0:0 --from=builder /usr/local/bin/scraper /usr/local/bin/scraper
-
-RUN mkdir -p log
+COPY --chown=0:0 --from=builder /usr/src/app.tar		/usr/src
+COPY --chown=0:0 --from=builder /usr/src/app/run.sh		/usr/src
+COPY --chown=0:0 --from=builder /usr/local/bin/scraper	/usr/local/bin/scraper
 
 EXPOSE ${PORT}
 
-CMD ["scraper"]
+ENTRYPOINT ["/usr/src/run.sh"]
